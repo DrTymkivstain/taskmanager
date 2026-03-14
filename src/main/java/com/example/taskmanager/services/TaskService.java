@@ -30,13 +30,6 @@ public class TaskService {
         taskDao.delete(id);
     }
     public Task update(Long id, Task task) {
-        Task oldtask = taskDao
-                .getById(id)
-                .orElseThrow(() -> new NoSuchElementException("task not found"));
-        oldtask.setCompleted(task.isCompleted());
-        oldtask.setTitle(task.getTitle());
-
-        Task updatedTask = taskDao.update(task);
-        return updatedTask;
+        return taskDao.update(id, task);
     }
 }

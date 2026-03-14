@@ -1,6 +1,7 @@
 package com.example.taskmanager.controller;
 
 import com.example.taskmanager.dao.impl.TaskDaoImpl;
+import com.example.taskmanager.dao.impl.TaskDaoJdbcImpl;
 import com.example.taskmanager.dto.TaskRequest;
 import com.example.taskmanager.dto.TaskResponse;
 import com.example.taskmanager.dto.TaskUpdateRequest;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 @WebServlet("/tasks/*")
 public class TaskServlet extends HttpServlet {
     private final ObjectMapper mapper = new ObjectMapper();
-    private final TaskService  taskService = new TaskService(new TaskDaoImpl());
+    private final TaskService  taskService = new TaskService(new TaskDaoJdbcImpl());
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -43,10 +44,7 @@ public class TaskServlet extends HttpServlet {
         task.setTitle(request.getTitle());
         task.setCompleted(false);
         Task created = taskService.create(task);
-        TaskResponse response = new TaskResponse(
-                created.getId(),
-                created.getTitle(),
-                created.isCompleted());
+        TaskResponse response = toResponse(created);
         sendJson(resp, response);
         resp.setStatus(HttpServletResponse.SC_CREATED);
     }
@@ -59,20 +57,23 @@ public class TaskServlet extends HttpServlet {
             return;}
         TaskUpdateRequest request = mapper.readValue(req.getInputStream(), TaskUpdateRequest.class);
         Task task = new Task();
-        task.setId(id);
         task.setTitle(request.getTitle());
         task.setCompleted(request.isCompleted());
         try {
             Task updated = taskService.update(id, task);
-            TaskResponse response = new TaskResponse(
-                    updated.getId(),
-                    updated.getTitle(),
-                    updated.isCompleted());
+            TaskResponse response = toResponse(updated);
             resp.setStatus(HttpServletResponse.SC_OK);
             sendJson(resp, response);
-        } catch (NoSuchElementException e) {
+        } catch (RuntimeException e) {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }
+    }
+
+    private static TaskResponse toResponse(Task updated) {
+        return new TaskResponse(
+                updated.getId(),
+                updated.getTitle(),
+                updated.isCompleted());
     }
 
     @Override
@@ -105,10 +106,7 @@ public class TaskServlet extends HttpServlet {
     private void handleGetAll(HttpServletResponse resp) throws IOException {
         List<TaskResponse> tasks = taskService.getAll()
                 .stream()
-                .map(task -> new TaskResponse(
-                        task.getId(),
-                        task.getTitle(),
-                        task.isCompleted()))
+                .map(TaskServlet::toResponse)
                 .collect(Collectors.toList());
 
         sendJson(resp, tasks);
@@ -118,11 +116,7 @@ public class TaskServlet extends HttpServlet {
         try {
             Task task = taskService.getById(id);
 
-            TaskResponse response = new TaskResponse(
-                    task.getId(),
-                    task.getTitle(),
-                    task.isCompleted()
-            );
+            TaskResponse response = toResponse(task);
 
             sendJson(resp, response);
 

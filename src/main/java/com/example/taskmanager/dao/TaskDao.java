@@ -14,5 +14,5 @@ public interface TaskDao {
 
     void delete(Long id);
 
-    Task update(Task task);
+    Task update(Long id, Task task);
 }

@@ -32,8 +32,16 @@ public class TaskDaoImpl implements TaskDao {
     }
 
     @Override
-    public Task update(Task task) {
-        storage.put(task.getId(), task);
-        return storage.get(task.getId());
+    public Task update(Long id, Task task) {
+        Task existing = storage.get(id);
+
+        if (existing == null) {
+            throw new NoSuchElementException("Task not found");
+        }
+
+        existing.setTitle(task.getTitle());
+        existing.setCompleted(task.isCompleted());
+
+        return existing;
     }
 }
