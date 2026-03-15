@@ -1,4 +1,4 @@
-package com.example.taskmanager.util;
+package com.example.taskmanager.config;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

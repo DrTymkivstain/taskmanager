@@ -1,6 +1,5 @@
 package com.example.taskmanager.controller;
 
-import com.example.taskmanager.dao.impl.TaskDaoImpl;
 import com.example.taskmanager.dao.impl.TaskDaoJdbcImpl;
 import com.example.taskmanager.dto.TaskRequest;
 import com.example.taskmanager.dto.TaskResponse;

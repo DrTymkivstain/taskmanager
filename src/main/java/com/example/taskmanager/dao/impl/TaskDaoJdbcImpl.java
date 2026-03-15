@@ -2,7 +2,7 @@ package com.example.taskmanager.dao.impl;
 
 import com.example.taskmanager.dao.TaskDao;
 import com.example.taskmanager.model.Task;
-import com.example.taskmanager.util.ConnectionUtil;
+import com.example.taskmanager.config.ConnectionUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
