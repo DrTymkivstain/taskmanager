@@ -39,9 +39,7 @@ public class TaskDaoJdbcImpl implements TaskDao {
     public List<Task> getAll() {
         String sql = "SELECT * FROM tasks";
         List<Task> tasks = new ArrayList<>();
-        try (Connection connection = ConnectionUtil.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
+        try (Connection connection = ConnectionUtil.getConnection(); PreparedStatement statement = connection.prepareStatement(sql); ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
                 tasks.add(new Task(resultSet.getLong("id"), resultSet.getString("title"), resultSet.getBoolean("completed")));
                 System.out.println("DEBUG: Total tasks fetched: " + tasks.size());
