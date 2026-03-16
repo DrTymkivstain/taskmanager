@@ -4,7 +4,6 @@ import com.example.taskmanager.dao.TaskDao;
 import com.example.taskmanager.model.Task;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 public class TaskService {
     private final TaskDao taskDao;
@@ -23,7 +22,7 @@ public class TaskService {
     }
 
     public Task getById(Long id) {
-        return taskDao.getById(id).orElseThrow();
+        return taskDao.getById(id).orElseThrow(() -> new RuntimeException("Task not found"));
     }
 
     public void delete(Long id) {
