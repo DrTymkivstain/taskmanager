@@ -17,7 +17,7 @@ public class UserService {
         this.userDao = userDao;
     }
 
-    public User createUser(UserRequestDto userRequestDto) {
+    public UserResponseDto createUser(UserRequestDto userRequestDto) {
         if(userDao.getByEmail(userRequestDto.getEmail()).isPresent()) {
             throw new AlreadyExistException("User with email " + userRequestDto.getEmail() + " already exists");
         }
@@ -29,12 +29,18 @@ public class UserService {
                 userRequestDto.getName(),
                 userRequestDto.getEmail(),
                 hash);
-        return userDao.create(user);
+        return toDto(userDao.create(user));
     }
 
-    public User getById(Long id) { return userDao.getById(id).orElseThrow(() -> new RuntimeException("User not found"));}
+    public UserResponseDto getById(Long id) {
+        User user =  userDao.getById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+    return toDto(user);
+    }
 
-    public List<User> getAll() {return userDao.getAll();}
+    public List<UserResponseDto> getAll() {
+        return userDao.getAll().stream()
+                .map(UserService::toDto)
+                .toList();}
 
     public UserResponseDto updateUser(Long id, UserRequestDto userRequestDto) {
         getById(id);
@@ -51,7 +57,7 @@ public class UserService {
         if(deleteCount == 0) {throw new EntityNotFoundException("User not found");}
     }
 
-    public UserResponseDto toDto(User user) {
+    private static UserResponseDto toDto(User user) {
         return new UserResponseDto(
                 user.getId(),
                 user.getName(),

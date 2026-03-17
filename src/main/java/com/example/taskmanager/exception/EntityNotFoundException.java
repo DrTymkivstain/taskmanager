@@ -1,7 +1,10 @@
 package com.example.taskmanager.exception;
 
 public class EntityNotFoundException extends AppException{
+
+    public static final int STATUS_CODE = 404;
+
     public EntityNotFoundException(String message) {
-        super(404, message);
+        super(STATUS_CODE, message);
     }
 }
