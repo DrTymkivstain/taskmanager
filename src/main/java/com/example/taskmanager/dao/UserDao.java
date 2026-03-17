@@ -10,6 +10,6 @@ public interface UserDao {
     Optional<User> getById(Long id);
     List<User> getAll();
     Optional<User> getByEmail(String email);
-    User update(User user);
-    void delete(Long id);
+    int update(User user);
+    int delete(Long id);
 }

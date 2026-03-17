@@ -88,7 +88,7 @@ public class UserDaoJdbcImpl implements UserDao {
     }
 
     @Override
-    public User update(User user) {
+    public int update(User user) {
         String sql = "UPDATE users SET name = ?, email = ?, password_hash = ? WHERE id = ?";
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -99,27 +99,21 @@ public class UserDaoJdbcImpl implements UserDao {
             statement.setLong(4, user.getId());
 
             int affectedRows = statement.executeUpdate();
-
-            if (affectedRows == 0) {
-                throw new RuntimeException("Update failed, no user found with id: " + user.getId());
-            }
+            return affectedRows;
         } catch (SQLException e) {
             throw new RuntimeException("Can`t update user with id" + user.getId(), e);
         }
-        return user;
     }
 
     @Override
-    public void delete(Long id) {
+    public int delete(Long id) {
         String sql = "DELETE FROM users WHERE id = ?";
 
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
             int affectedRows = statement.executeUpdate();
-            if (affectedRows == 0) {
-                throw new RuntimeException("Cannot delete user with id: " + id);
-            }
+            return affectedRows;
         } catch (SQLException e) {
             throw new RuntimeException("Cannot delete user with id: " + id, e);
         }
