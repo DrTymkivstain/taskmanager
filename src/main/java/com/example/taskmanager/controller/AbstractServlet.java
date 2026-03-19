@@ -71,7 +71,7 @@ public abstract class AbstractServlet extends HttpServlet {
         try {
             return Long.parseLong(pathInfo.substring(1));
         } catch (NumberFormatException e) {
-            throw new ValidationException("Invalid ID format: " + pathInfo.substring(1));;
+            throw new ValidationException("Invalid ID format: " + pathInfo.substring(1));
         }
     }
 
