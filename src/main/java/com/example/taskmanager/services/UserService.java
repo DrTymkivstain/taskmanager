@@ -5,6 +5,7 @@ import com.example.taskmanager.dto.UserRequestDto;
 import com.example.taskmanager.dto.UserResponseDto;
 import com.example.taskmanager.exception.AlreadyExistException;
 import com.example.taskmanager.exception.EntityNotFoundException;
+import com.example.taskmanager.exception.UnAuthorizedException;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.util.PasswordUtil;
 
@@ -55,6 +56,14 @@ public class UserService {
     public void deleteUser(Long id) {
         int deleteCount = userDao.delete(id);
         if(deleteCount == 0) {throw new EntityNotFoundException("User not found");}
+    }
+
+    public User authenticate(String email, String password) {
+        User user = userDao.getByEmail(email).orElseThrow(() -> new UnAuthorizedException("Invalid email or password"));
+        if(!PasswordUtil.checkPassword(password,user.getPasswordHash())){
+            throw new UnAuthorizedException("Invalid email or password");
+        }
+        return user;
     }
 
     private static UserResponseDto toDto(User user) {
