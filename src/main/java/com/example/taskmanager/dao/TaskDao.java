@@ -12,7 +12,7 @@ public interface TaskDao {
 
     Optional<Task> getById(Long id);
 
-    void delete(Long id);
+    int delete(Long id);
 
-    Task update(Long id, Task task);
+    int update(Task task);
 }

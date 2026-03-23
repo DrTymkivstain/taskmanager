@@ -1,34 +1,53 @@
 package com.example.taskmanager.services;
 
-import com.example.taskmanager.dao.TaskDao;
+import com.example.taskmanager.dao.impl.TaskDaoJdbcImpl;
+import com.example.taskmanager.dto.TaskRequestDto;
+import com.example.taskmanager.dto.TaskResponseDto;
+import com.example.taskmanager.exception.EntityNotFoundException;
 import com.example.taskmanager.model.Task;
 
 import java.util.List;
 
 public class TaskService {
-    private final TaskDao taskDao;
-
-
-    public TaskService(TaskDao taskDao) {
+    private final TaskDaoJdbcImpl taskDao;
+    public TaskService(TaskDaoJdbcImpl taskDao) {
         this.taskDao = taskDao;
     }
 
-    public Task create(Task task) {
-        return taskDao.create(task);
+
+    public TaskResponseDto create(TaskRequestDto taskRequestDto) {
+        Task task = new Task(null, taskRequestDto.getTitle(), false);
+        return toDto(taskDao.create(task));
     }
 
-    public List<Task> getAll() {
-        return taskDao.getAll();
+    public List<TaskResponseDto> getAll() {
+        return taskDao.getAll().stream()
+                .map(TaskService::toDto)
+                .toList();
     }
 
-    public Task getById(Long id) {
-        return taskDao.getById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+    public TaskResponseDto getById(Long id) {
+        return toDto(taskDao.getById(id).orElseThrow(() -> new EntityNotFoundException("Task not found")));
     }
 
     public void delete(Long id) {
-        taskDao.delete(id);
+        int deleteCount = taskDao.delete(id);
+        if(deleteCount == 0) {throw new EntityNotFoundException("Task not found");}
     }
-    public Task update(Long id, Task task) {
-        return taskDao.update(id, task);
+    public TaskResponseDto update(Long id, TaskRequestDto taskRequestDto) {
+        getById(id);
+
+        Task task = new Task(id, taskRequestDto.getTitle(), taskRequestDto.getCompleted());
+        int updated = taskDao.update(task);
+        if(updated == 0) {throw new EntityNotFoundException("User not found");}
+        return toDto(task);
+    }
+
+    private static TaskResponseDto toDto(Task task) {
+        return new TaskResponseDto(
+                task.getId(),
+                task.getTitle(),
+                task.isCompleted()
+        );
     }
 }
