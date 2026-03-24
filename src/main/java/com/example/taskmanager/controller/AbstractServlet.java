@@ -1,13 +1,14 @@
 package com.example.taskmanager.controller;
 
-import com.example.taskmanager.dto.UserRequestDto;
 import com.example.taskmanager.exception.AppException;
+import com.example.taskmanager.exception.UnAuthorizedException;
 import com.example.taskmanager.exception.ValidationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.Map;
@@ -16,31 +17,55 @@ public abstract class AbstractServlet extends HttpServlet {
     protected final ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        handleRequest(resp, () ->{
-            Long id = extractId(req);
+    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+       handleRequest(resp,
+               () -> {
+                   System.out.println(">>> [DEBUG] Запит на: " + req.getRequestURI() + " | Метод: " + req.getMethod());
+                   resp.setContentType("application/json");
+                   resp.setCharacterEncoding("UTF-8");
 
-            if (id == null) {
-                handleGetAll(resp);
-                return;
-            }
+                   boolean isRegistration = req.getServletPath().startsWith("/users") && req.getMethod().equals("POST");
+                   boolean isLogin = req.getServletPath().startsWith("/login") && req.getMethod().equals("POST");
 
-            handleGetById(resp, id);
-        });
+                   if (!isRegistration && !isLogin) {
+                       HttpSession session = req.getSession(false);
+                       if (session == null || session.getAttribute("user") == null) {
+                           throw new UnAuthorizedException("Unauthorized: Please log in");
+                       }
+                       req.setAttribute("currentUser", session.getAttribute("user"));
+                   }
+                   super.service(req, resp);
+       });
     }
 
-    protected abstract void handleGetById(HttpServletResponse resp, Long id) throws Exception;
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
+        Long id = extractId(req);
 
-    protected abstract void handleGetAll(HttpServletResponse resp) throws Exception;
+        if (id == null) {
+            handleGetAll(resp);
+            return;
+        }
 
-    protected void sendJson(HttpServletResponse resp, Object body) throws IOException {
-        resp.setContentType("application/json; charset=UTF-8");
-        resp.getWriter().write(mapper.writeValueAsString(body));
+        handleGetById(resp, id);
+    }
+
+    protected abstract void handleGetById(HttpServletResponse resp, Long id);
+
+    protected abstract void handleGetAll(HttpServletResponse resp);
+
+    protected void sendJson(HttpServletResponse resp, Object body) {
+        try {
+            resp.setContentType("application/json; charset=UTF-8");
+            resp.getWriter().write(mapper.writeValueAsString(body));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @FunctionalInterface
     protected interface ServletLogic {
-        void execute() throws Exception;
+        void execute() throws ServletException, IOException;
     }
 
     protected void handleRequest(HttpServletResponse resp, ServletLogic logic) {
@@ -49,15 +74,11 @@ public abstract class AbstractServlet extends HttpServlet {
 
         } catch (AppException e) {
             resp.setStatus(e.getStatusCode());
-            try {
                 sendJson(resp, Map.of("error", e.getMessage()));
-            } catch (IOException io) { io.printStackTrace(); }
         } catch (Exception e) {
             e.printStackTrace();
             resp.setStatus(500);
-            try {
                 sendJson(resp, Map.of("error", "Internal Server Error: " + e.getMessage()));
-            } catch (IOException io) { io.printStackTrace(); }
         }
     }
 
@@ -71,12 +92,16 @@ public abstract class AbstractServlet extends HttpServlet {
         try {
             return Long.parseLong(pathInfo.substring(1));
         } catch (NumberFormatException e) {
-            throw new ValidationException("Invalid ID format: " + pathInfo.substring(1));;
+            throw new ValidationException("Invalid ID format: " + pathInfo.substring(1));
         }
     }
 
-    protected UserRequestDto getUserRequestDto(HttpServletRequest req) throws IOException {
-        return mapper.readValue(req.getReader(), UserRequestDto.class);
+    protected <T> T getRequestDto(HttpServletRequest req, Class<T> clazz) {
+        try {
+            return mapper.readValue(req.getReader(), clazz);
+        } catch (IOException e) {
+            throw new ValidationException("Invalid JSON format: " + e.getMessage());
+        }
     }
 
 
