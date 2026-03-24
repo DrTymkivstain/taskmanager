@@ -1,13 +1,15 @@
 package com.example.taskmanager.controller;
 
-import com.example.taskmanager.dto.UserRequestDto;
 import com.example.taskmanager.exception.AppException;
+import com.example.taskmanager.exception.UnAuthorizedException;
 import com.example.taskmanager.exception.ValidationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
 import java.util.Map;
 
@@ -17,7 +19,23 @@ public abstract class AbstractServlet extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
        handleRequest(resp,
-               () -> {super.service(req, resp);});
+               () -> {
+                   System.out.println(">>> [DEBUG] Запит на: " + req.getRequestURI() + " | Метод: " + req.getMethod());
+                   resp.setContentType("application/json");
+                   resp.setCharacterEncoding("UTF-8");
+
+                   boolean isRegistration = req.getServletPath().startsWith("/users") && req.getMethod().equals("POST");
+                   boolean isLogin = req.getServletPath().startsWith("/login") && req.getMethod().equals("POST");
+
+                   if (!isRegistration && !isLogin) {
+                       HttpSession session = req.getSession(false);
+                       if (session == null || session.getAttribute("user") == null) {
+                           throw new UnAuthorizedException("Unauthorized: Please log in");
+                       }
+                       req.setAttribute("currentUser", session.getAttribute("user"));
+                   }
+                   super.service(req, resp);
+       });
     }
 
     @Override

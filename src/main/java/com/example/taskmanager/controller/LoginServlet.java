@@ -32,6 +32,7 @@ public class LoginServlet extends HttpServlet {
             User user = userService.authenticate(loginRequestDto.getEmail(), loginRequestDto.getPassword());
 
             HttpSession session = req.getSession(true);
+            session.setMaxInactiveInterval(1800);
             session.setAttribute("user", user);
             resp.setStatus(HttpServletResponse.SC_OK);
             mapper.writeValue(resp.getWriter(), "Welcome");
