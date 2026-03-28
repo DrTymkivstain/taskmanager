@@ -8,6 +8,7 @@ import lombok.Getter;
 public class TaskResponseDto {
     private Long id;
     private String title;
-    private boolean completed;
+    private String description;
+    private String status;
 
 }

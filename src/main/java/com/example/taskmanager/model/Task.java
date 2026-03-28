@@ -10,5 +10,6 @@ import lombok.NoArgsConstructor;
 public class Task {
     private Long id;
     private String title;
-    private boolean completed;
+    private TaskStatus status;
+    private Long userId;
 }

@@ -6,5 +6,6 @@ import lombok.*;
 @Setter
 public class TaskRequestDto {
     private String title;
-    private Boolean completed;
+    private String description;
+    private String status;
 }
