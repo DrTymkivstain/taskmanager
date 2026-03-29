@@ -5,6 +5,7 @@ import com.example.taskmanager.dto.TaskRequestDto;
 import com.example.taskmanager.dto.TaskResponseDto;
 import com.example.taskmanager.dto.TaskUpdateRequest;
 import com.example.taskmanager.model.Task;
+import com.example.taskmanager.model.User;
 import com.example.taskmanager.services.TaskService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -23,7 +24,8 @@ public class TaskServlet extends AbstractServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
         TaskRequestDto request = getRequestDto(req, TaskRequestDto.class);
-        TaskResponseDto taskResponseDto = taskService.create(request);
+        Long userId = ((User)req.getAttribute("currentUser")).getId();
+        TaskResponseDto taskResponseDto = taskService.create(request, userId);
         resp.setStatus(HttpServletResponse.SC_CREATED);
         sendJson(resp, taskResponseDto);
     }

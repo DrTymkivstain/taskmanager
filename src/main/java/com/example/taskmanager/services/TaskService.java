@@ -5,6 +5,7 @@ import com.example.taskmanager.dto.TaskRequestDto;
 import com.example.taskmanager.dto.TaskResponseDto;
 import com.example.taskmanager.exception.EntityNotFoundException;
 import com.example.taskmanager.model.Task;
+import com.example.taskmanager.model.TaskStatus;
 
 import java.util.List;
 
@@ -15,8 +16,12 @@ public class TaskService {
     }
 
 
-    public TaskResponseDto create(TaskRequestDto taskRequestDto) {
-        Task task = new Task(null, taskRequestDto.getTitle(), false);
+    public TaskResponseDto create(TaskRequestDto taskRequestDto, Long userId) {
+        Task task = new Task(null,
+                taskRequestDto.getTitle(),
+                taskRequestDto.getDescription(),
+                TaskStatus.fromString(taskRequestDto.getStatus()),
+                userId);
         return toDto(taskDao.create(task));
     }
 
@@ -47,7 +52,7 @@ public class TaskService {
         return new TaskResponseDto(
                 task.getId(),
                 task.getTitle(),
-                task.isCompleted()
-        );
+                task.getDescription(),
+                task.getStatus().getTitle());
     }
 }

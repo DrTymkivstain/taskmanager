@@ -12,12 +12,14 @@ import java.util.Optional;
 public class TaskDaoJdbcImpl implements TaskDao {
     @Override
     public Task create(Task task) {
-        String sql = "INSERT INTO tasks (title, completed) VALUES (?, ?)";
+        String sql = "INSERT INTO tasks (title, status, description, user_id) VALUES (?, ?, ?, ?)";
 
         try (Connection connection = ConnectionUtil.getConnection(); PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             statement.setString(1, task.getTitle());
-            statement.setBoolean(2, task.isCompleted());
+            statement.setString(2, task.getStatus().name());
+            statement.setString(3, task.getDescription());
+            statement.setLong(4, task.getUserId());
 
             statement.executeUpdate();
 
