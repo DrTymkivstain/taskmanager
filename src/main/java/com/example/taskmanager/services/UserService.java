@@ -6,6 +6,7 @@ import com.example.taskmanager.dto.UserResponseDto;
 import com.example.taskmanager.exception.AlreadyExistException;
 import com.example.taskmanager.exception.EntityNotFoundException;
 import com.example.taskmanager.exception.UnAuthorizedException;
+import com.example.taskmanager.mapper.UserMapper;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.util.PasswordUtil;
 
@@ -25,31 +26,27 @@ public class UserService {
 
         String hash = PasswordUtil.hashPassword(userRequestDto.getPassword());
 
-        User user = new User(
-                null,
-                userRequestDto.getName(),
-                userRequestDto.getEmail(),
-                hash);
-        return toDto(userDao.create(user));
+        User user = UserMapper.toUser(userRequestDto, hash);
+        return UserMapper.toUserResponseDto(userDao.create(user));
     }
 
     public UserResponseDto getById(Long id) {
         User user =  userDao.getById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
-    return toDto(user);
+    return UserMapper.toUserResponseDto(user);
     }
 
     public List<UserResponseDto> getAll() {
         return userDao.getAll().stream()
-                .map(UserService::toDto)
+                .map(UserMapper::toUserResponseDto)
                 .toList();}
 
     public UserResponseDto updateUser(Long id, UserRequestDto userRequestDto) {
         getById(id);
         String hash = PasswordUtil.hashPassword(userRequestDto.getPassword());
-        User user = new  User(id, userRequestDto.getName(), userRequestDto.getEmail(), hash);
+        User user = UserMapper.toUser(userRequestDto, hash);
          int updated = userDao.update(user);
          if(updated == 0) {throw new EntityNotFoundException("User not found");}
-         return toDto(user);
+         return UserMapper.toUserResponseDto(user);
 
     }
 
@@ -64,13 +61,5 @@ public class UserService {
             throw new UnAuthorizedException("Invalid email or password");
         }
         return user;
-    }
-
-    private static UserResponseDto toDto(User user) {
-        return new UserResponseDto(
-                user.getId(),
-                user.getName(),
-                user.getEmail()
-        );
     }
 }

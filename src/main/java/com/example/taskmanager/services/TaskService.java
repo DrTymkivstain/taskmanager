@@ -4,6 +4,7 @@ import com.example.taskmanager.dao.impl.TaskDaoJdbcImpl;
 import com.example.taskmanager.dto.TaskRequestDto;
 import com.example.taskmanager.dto.TaskResponseDto;
 import com.example.taskmanager.exception.EntityNotFoundException;
+import com.example.taskmanager.mapper.TaskMapper;
 import com.example.taskmanager.model.Task;
 import com.example.taskmanager.model.TaskStatus;
 
@@ -17,22 +18,18 @@ public class TaskService {
 
 
     public TaskResponseDto create(TaskRequestDto taskRequestDto, Long userId) {
-        Task task = new Task(null,
-                taskRequestDto.getTitle(),
-                taskRequestDto.getDescription(),
-                TaskStatus.fromString(taskRequestDto.getStatus()),
-                userId);
-        return toDto(taskDao.create(task));
+        Task task = TaskMapper.toTask(taskRequestDto, userId);
+        return TaskMapper.toTaskResponseDto(taskDao.create(task));
     }
 
     public List<TaskResponseDto> getAll() {
         return taskDao.getAll().stream()
-                .map(TaskService::toDto)
+                .map(TaskMapper::toTaskResponseDto)
                 .toList();
     }
 
     public TaskResponseDto getById(Long id) {
-        return toDto(taskDao.getById(id).orElseThrow(() -> new EntityNotFoundException("Task not found")));
+        return TaskMapper.toTaskResponseDto(taskDao.getById(id).orElseThrow(() -> new EntityNotFoundException("Task not found")));
     }
 
     public void delete(Long id) {
@@ -42,17 +39,9 @@ public class TaskService {
     public TaskResponseDto update(Long id, TaskRequestDto taskRequestDto) {
         getById(id);
 
-        Task task = new Task(id, taskRequestDto.getTitle(), taskRequestDto.getCompleted());
+        Task task = TaskMapper.toTask(taskRequestDto, id);
         int updated = taskDao.update(task);
         if(updated == 0) {throw new EntityNotFoundException("User not found");}
-        return toDto(task);
-    }
-
-    private static TaskResponseDto toDto(Task task) {
-        return new TaskResponseDto(
-                task.getId(),
-                task.getTitle(),
-                task.getDescription(),
-                task.getStatus().getTitle());
+        return TaskMapper.toTaskResponseDto(task);
     }
 }
