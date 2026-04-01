@@ -39,13 +39,13 @@ public class UserServlet extends AbstractServlet {
     }
 
     @Override
-    protected void handleGetById(HttpServletResponse resp, Long id) {
+    protected void handleGetById(HttpServletResponse resp, Long id, Long userId) {
         UserResponseDto userResponseDto = userService.getById(id);
         sendJson(resp, userResponseDto);
     }
 
     @Override
-    protected void handleGetAll(HttpServletResponse resp) {
+    protected void handleGetAll(HttpServletResponse resp, Long userId) {
         List<UserResponseDto> users = userService.getAll();
         sendJson(resp, users);
     }

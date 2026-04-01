@@ -2,6 +2,7 @@ package com.example.taskmanager.controller;
 
 import com.example.taskmanager.exception.AppException;
 import com.example.taskmanager.exception.ValidationException;
+import com.example.taskmanager.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -21,19 +22,20 @@ public abstract class AbstractServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
+        Long userId = ((User) req.getAttribute("CurrentUserId")).getId();
         Long id = extractId(req);
 
         if (id == null) {
-            handleGetAll(resp);
+            handleGetAll(resp, userId);
             return;
         }
 
-        handleGetById(resp, id);
+        handleGetById(resp, id, userId);
     }
 
-    protected abstract void handleGetById(HttpServletResponse resp, Long id);
+    protected abstract void handleGetById(HttpServletResponse resp, Long id, Long userId);
 
-    protected abstract void handleGetAll(HttpServletResponse resp);
+    protected abstract void handleGetAll(HttpServletResponse resp, Long userId);
 
     protected void sendJson(HttpServletResponse resp, Object body) {
         try {

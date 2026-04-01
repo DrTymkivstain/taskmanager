@@ -8,11 +8,11 @@ import java.util.Optional;
 public interface TaskDao {
     Task create(Task task);
 
-    List<Task> getAll();
+    List<Task> getTasksByUserId(Long userId);
 
-    Optional<Task> getById(Long id);
+    Optional<Task> getById(Long id, Long userId);
 
-    int delete(Long id);
+    int delete(Long id, Long userId);
 
     int update(Task task);
 }
