@@ -3,6 +3,8 @@ package com.example.taskmanager.dao.impl;
 import com.example.taskmanager.config.ConnectionUtil;
 import com.example.taskmanager.dao.UserDao;
 import com.example.taskmanager.model.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -10,10 +12,12 @@ import java.util.List;
 import java.util.Optional;
 
 public class UserDaoJdbcImpl implements UserDao {
+    private final Logger logger = LoggerFactory.getLogger(UserDaoJdbcImpl.class);
 
     @Override
     public User create(User user) {
         String sql = "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)";
+        logger.debug("Creating user by id: {} by user: {}", user.getId(), user.getEmail());
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(
                      sql,
@@ -27,9 +31,11 @@ public class UserDaoJdbcImpl implements UserDao {
                 if (generatedKeys.next()) {
                     user.setId(generatedKeys.getLong(1));
                 }
+                logger.info("Successfully created user by id: {} by user: {}", user.getId(), user.getEmail());
                 return user;
             }
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             throw new RuntimeException("Can`t create user", e);
         }
     }
@@ -37,6 +43,7 @@ public class UserDaoJdbcImpl implements UserDao {
     @Override
     public Optional<User> getById(Long id) {
         String sql = "SELECT * FROM users WHERE id = ?";
+        logger.debug("Getting user by id: {}", id);
 
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -48,6 +55,7 @@ public class UserDaoJdbcImpl implements UserDao {
                 return Optional.empty();
             }
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -64,6 +72,7 @@ public class UserDaoJdbcImpl implements UserDao {
                 users.add(getUser(resaltSet));
             }
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             throw new RuntimeException(e);
         }
         return users;
@@ -72,17 +81,20 @@ public class UserDaoJdbcImpl implements UserDao {
     @Override
     public Optional<User> getByEmail(String email) {
         String sql = "SELECT * FROM users WHERE email = ?";
+        logger.debug("Getting user by email: {}", email);
 
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, email);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
+                    logger.info("Successfully getting user by id: {} by user: {}", resultSet.getLong(1), resultSet.getString(2));
                     return Optional.of(getUser(resultSet));
                 }
                 return Optional.empty();
             }
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             throw new RuntimeException("Cannot get user by email: " + email, e);
         }
     }
@@ -90,6 +102,7 @@ public class UserDaoJdbcImpl implements UserDao {
     @Override
     public int update(User user) {
         String sql = "UPDATE users SET name = ?, email = ?, password_hash = ? WHERE id = ?";
+        logger.debug("Updating user by id: {} by user: {}", user.getId(), user.getEmail());
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
@@ -99,8 +112,10 @@ public class UserDaoJdbcImpl implements UserDao {
             statement.setLong(4, user.getId());
 
             int affectedRows = statement.executeUpdate();
+            logger.info("Successfully updated user by id: {} by user: {}", user.getId(), user.getEmail());
             return affectedRows;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             throw new RuntimeException("Can`t update user with id" + user.getId(), e);
         }
     }
@@ -108,13 +123,16 @@ public class UserDaoJdbcImpl implements UserDao {
     @Override
     public int delete(Long id) {
         String sql = "DELETE FROM users WHERE id = ?";
+        logger.debug("Deleting user by id: {}", id);
 
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
             int affectedRows = statement.executeUpdate();
+            logger.info("Successfully deleted user with id: {}", id);
             return affectedRows;
         } catch (SQLException e) {
+            logger.error(e.getMessage());
             throw new RuntimeException("Cannot delete user with id: " + id, e);
         }
     }

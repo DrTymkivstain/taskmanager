@@ -8,16 +8,40 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Map;
 
 public abstract class AbstractServlet extends HttpServlet {
     protected final ObjectMapper mapper = new ObjectMapper();
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
+        logger.info("Incoming request: {} {}", req.getMethod(), req.getRequestURI());
        handleRequest(resp, () -> {super.service(req, resp);});
+    }
+
+    @FunctionalInterface
+    protected interface ServletLogic {
+        void execute() throws ServletException, IOException;
+    }
+
+    protected void handleRequest(HttpServletResponse resp, ServletLogic logic) {
+        try {
+            logic.execute();
+
+        } catch (AppException e) {
+            logger.warn("Business error: status {}, message: {}", e.getStatusCode(), e.getMessage());
+            resp.setStatus(e.getStatusCode());
+            sendJson(resp, Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("SYSTEM ERROR: ", e);
+            resp.setStatus(500);
+            sendJson(resp, Map.of("error", "Internal Server Error: " + e.getMessage()));
+        }
     }
 
     @Override
@@ -46,25 +70,6 @@ public abstract class AbstractServlet extends HttpServlet {
         }
     }
 
-    @FunctionalInterface
-    protected interface ServletLogic {
-        void execute() throws ServletException, IOException;
-    }
-
-    protected void handleRequest(HttpServletResponse resp, ServletLogic logic) {
-        try {
-            logic.execute();
-
-        } catch (AppException e) {
-            resp.setStatus(e.getStatusCode());
-                sendJson(resp, Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            e.printStackTrace();
-            resp.setStatus(500);
-                sendJson(resp, Map.of("error", "Internal Server Error: " + e.getMessage()));
-        }
-    }
-
     protected Long extractId(HttpServletRequest req) {
         String pathInfo = req.getPathInfo();
 
@@ -86,6 +91,4 @@ public abstract class AbstractServlet extends HttpServlet {
             throw new ValidationException("Invalid JSON format: " + e.getMessage());
         }
     }
-
-
 }
