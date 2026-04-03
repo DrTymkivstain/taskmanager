@@ -2,17 +2,15 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL
-    );
+    role VARCHAR(20) NOT NULL DEFAULT 'USER',
+    CONSTRAINT check_role CHECK (role IN ('USER', 'ADMIN'))
+);
 
 CREATE TABLE IF NOT EXISTS tasks (
     id SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
+    title VARCHAR(100) NOT NULL,
     description TEXT,
-    status VARCHAR(20) NOT NULL DEFAULT 'NOT_STARTED',
+    status VARCHAR(20) NOT NULL DEFAULT 'NEW',
     user_id INTEGER NOT NULL,
-    CONSTRAINT fk_tasks_user
-    FOREIGN KEY (user_id)
-    REFERENCES users(id)
-    ON DELETE CASCADE
-    );
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);

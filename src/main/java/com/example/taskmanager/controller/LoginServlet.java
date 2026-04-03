@@ -5,12 +5,13 @@ import com.example.taskmanager.dto.LoginRequestDto;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.services.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -19,10 +20,11 @@ import java.util.Collections;
 public class LoginServlet extends HttpServlet {
     private final ObjectMapper mapper = new ObjectMapper();
     private final UserService userService = new UserService(new UserDaoJdbcImpl());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws  IOException {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
 
@@ -36,7 +38,10 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute("user", user);
             resp.setStatus(HttpServletResponse.SC_OK);
             mapper.writeValue(resp.getWriter(), "Welcome");
+            logger.info("Welcome user with email: {}", user.getEmail());
         } catch (Exception e) {
+            logger.error(e.getMessage());
+
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             mapper.writeValue(resp.getWriter(), Collections.singletonMap("error", "Invalid email or password"));
         }

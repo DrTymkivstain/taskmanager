@@ -2,6 +2,7 @@ package com.example.taskmanager.mapper;
 
 import com.example.taskmanager.dto.UserRequestDto;
 import com.example.taskmanager.dto.UserResponseDto;
+import com.example.taskmanager.model.Role;
 import com.example.taskmanager.model.User;
 
 public class UserMapper {
@@ -11,6 +12,7 @@ public class UserMapper {
                 .name(userRequestDto.getName())
                 .email(userRequestDto.getEmail())
                 .passwordHash( passwordHash)
+                .role(Role.USER)
                 .build();
     }
 

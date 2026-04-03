@@ -2,6 +2,7 @@ package com.example.taskmanager.dao.impl;
 
 import com.example.taskmanager.config.ConnectionUtil;
 import com.example.taskmanager.dao.UserDao;
+import com.example.taskmanager.model.Role;
 import com.example.taskmanager.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +17,8 @@ public class UserDaoJdbcImpl implements UserDao {
 
     @Override
     public User create(User user) {
-        String sql = "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)";
-        logger.debug("Creating user by id: {} by user: {}", user.getId(), user.getEmail());
+        String sql = "INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)";
+        logger.debug("Creating user : {}", user.getEmail());
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(
                      sql,
@@ -25,6 +26,7 @@ public class UserDaoJdbcImpl implements UserDao {
             statement.setString(1, user.getName());
             statement.setString(2, user.getEmail());
             statement.setString(3, user.getPasswordHash());
+            statement.setString(4, user.getRole().name());
             statement.executeUpdate();
 
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
@@ -101,7 +103,7 @@ public class UserDaoJdbcImpl implements UserDao {
 
     @Override
     public int update(User user) {
-        String sql = "UPDATE users SET name = ?, email = ?, password_hash = ? WHERE id = ?";
+        String sql = "UPDATE users SET name = ?, email = ?, password_hash = ?, role = ? WHERE id = ?";
         logger.debug("Updating user by id: {} by user: {}", user.getId(), user.getEmail());
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -109,6 +111,7 @@ public class UserDaoJdbcImpl implements UserDao {
             statement.setString(1, user.getName());
             statement.setString(2, user.getEmail());
             statement.setString(3, user.getPasswordHash());
+            statement.setString(4, user.getRole().name());
             statement.setLong(4, user.getId());
 
             int affectedRows = statement.executeUpdate();
@@ -142,6 +145,7 @@ public class UserDaoJdbcImpl implements UserDao {
                 resultSet.getLong("id"),
                 resultSet.getString("name"),
                 resultSet.getString("email"),
-                resultSet.getString("password_hash"));
+                resultSet.getString("password_hash"),
+                Role.valueOf((resultSet.getString("role"))));
     }
 }
