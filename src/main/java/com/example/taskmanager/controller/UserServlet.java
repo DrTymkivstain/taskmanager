@@ -26,7 +26,7 @@ public class UserServlet extends AbstractServlet {
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) {
             Long id = extractId(req);
             UserRequestDto userRequestDto = getRequestDto(req, UserRequestDto.class);
-            UserResponseDto userResponseDto = userService.updateUser(id, userRequestDto);
+            UserResponseDto userResponseDto = userService.updateCurrentUser(id, userRequestDto);
             resp.setStatus(HttpServletResponse.SC_OK);
             sendJson(resp, userResponseDto);
     }

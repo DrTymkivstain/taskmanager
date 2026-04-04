@@ -7,6 +7,7 @@ import com.example.taskmanager.exception.AlreadyExistException;
 import com.example.taskmanager.exception.EntityNotFoundException;
 import com.example.taskmanager.exception.UnAuthorizedException;
 import com.example.taskmanager.mapper.UserMapper;
+import com.example.taskmanager.model.Role;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.util.PasswordUtil;
 import org.slf4j.Logger;
@@ -49,16 +50,39 @@ public class UserService {
                 .map(UserMapper::toUserResponseDto)
                 .toList();}
 
-    public UserResponseDto updateUser(Long id, UserRequestDto userRequestDto) {
-        logger.debug("Attempting to update user by id: {}", id);
-        getById(id);
-        String hash = PasswordUtil.hashPassword(userRequestDto.getPassword());
-        User user = UserMapper.toUser(userRequestDto, hash);
-         int updated = userDao.update(user);
-         logger.info("Successfully updated user by id: {} by user: {} with affected rows: {}", id, user, updated);
-         if(updated == 0) {throw new EntityNotFoundException("User not found");}
-         return UserMapper.toUserResponseDto(user);
+    public UserResponseDto updateCurrentUser(Long id, UserRequestDto userRequestDto) {
+        logger.debug("Attempting to update user with id: {}  by admin", id);
 
+        User fromDb = userDao.getById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+        if(userRequestDto.getEmail() != null && !userRequestDto.getEmail().isEmpty() ) {
+            fromDb.setEmail(userRequestDto.getEmail());
+        }
+        if(userRequestDto.getName() != null && !userRequestDto.getName().isEmpty() ) {
+            fromDb.setName(userRequestDto.getName());
+        }
+        if(userRequestDto.getPassword() != null && !userRequestDto.getPassword().isEmpty() ) {
+            fromDb.setPasswordHash(PasswordUtil.hashPassword(userRequestDto.getPassword()));
+        }
+         int updated = userDao.update(fromDb);
+         logger.info("Successfully updated user by id: {} by user: {} with affected rows: {}", id, fromDb, updated);
+         if(updated == 0) {throw new EntityNotFoundException("User not found");}
+         return UserMapper.toUserResponseDto(fromDb);
+    }
+    public UserResponseDto updateUserByAdmin(Long id, UserRequestDto userRequestDto, Role role) {
+        logger.debug("Attempting to update user by id: {}", id);
+
+        User fromDb = userDao.getById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+
+        if (userRequestDto.getName() != null && !userRequestDto.getName().isEmpty()) {
+            fromDb.setName(userRequestDto.getName());
+        }
+        if (role != null) {
+            fromDb.setRole(role);
+        }
+        int updated = userDao.update(fromDb);
+        logger.info("Successfully updated user with id: {} by admin, with affected rows: {}", id, updated);
+        if(updated == 0) {throw new EntityNotFoundException("User not found");}
+        return UserMapper.toUserResponseDto(fromDb);
     }
 
     public void deleteUser(Long id) {
