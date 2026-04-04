@@ -1,5 +1,7 @@
 package com.example.taskmanager.filter;
 
+import com.example.taskmanager.model.Role;
+import com.example.taskmanager.model.User;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,7 +37,14 @@ public class LoginFilter implements Filter {
             return;
         }
 
-        req.setAttribute("currentUser", session.getAttribute("user"));
+        User user = (User) session.getAttribute("user");
+        if(req.getServletPath().contains("/admin") && !user.getRole().equals(Role.ADMIN)){
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().write("{\"error\": \"Forbidden: Admin rights required\"}");
+            return;
+        }
+
+        req.setAttribute("currentUser", user);
         filterChain.doFilter(servletRequest, servletResponse);
     }
 }
