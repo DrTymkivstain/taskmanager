@@ -3,7 +3,6 @@ package com.example.taskmanager.controller;
 import com.example.taskmanager.dao.impl.TaskDaoJdbcImpl;
 import com.example.taskmanager.dto.TaskRequestDto;
 import com.example.taskmanager.dto.TaskResponseDto;
-import com.example.taskmanager.model.Task;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.services.TaskService;
 import jakarta.servlet.annotation.WebServlet;
@@ -29,7 +28,7 @@ public class TaskServlet extends AbstractServlet {
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) {
         Long userId = ((User)req.getAttribute("currentUser")).getId();
-        Long id = extractId(req);
+        Long id = extractIdFromPath(req);
 
         TaskRequestDto taskRequestDto = getRequestDto(req, TaskRequestDto.class);
         TaskResponseDto taskResponseDto = taskService.update(id, taskRequestDto, userId);
@@ -40,7 +39,7 @@ public class TaskServlet extends AbstractServlet {
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
         Long userId = ((User)req.getAttribute("currentUser")).getId();
-        Long id = extractId(req);
+        Long id = extractIdFromPath(req);
         taskService.delete(id, userId);
         resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }

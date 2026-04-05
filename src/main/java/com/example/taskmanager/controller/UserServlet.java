@@ -24,7 +24,7 @@ public class UserServlet extends AbstractServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) {
-            Long id = extractId(req);
+            Long id = extractIdFromPath(req);
             UserRequestDto userRequestDto = getRequestDto(req, UserRequestDto.class);
             UserResponseDto userResponseDto = userService.updateCurrentUser(id, userRequestDto);
             resp.setStatus(HttpServletResponse.SC_OK);
@@ -33,7 +33,7 @@ public class UserServlet extends AbstractServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
-        Long id = extractId(req);
+        Long id = extractIdFromPath(req);
         userService.deleteUser(id);
         resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }

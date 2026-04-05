@@ -47,7 +47,7 @@ public abstract class AbstractServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         Long userId = ((User) req.getAttribute("CurrentUserId")).getId();
-        Long id = extractId(req);
+        Long id = extractIdFromPath(req);
 
         if (id == null) {
             handleGetAll(resp, userId);
@@ -70,17 +70,18 @@ public abstract class AbstractServlet extends HttpServlet {
         }
     }
 
-    protected Long extractId(HttpServletRequest req) {
-        String pathInfo = req.getPathInfo();
-
+    protected Long extractIdFromPath(HttpServletRequest req) {
+        String pathInfo = req.getPathInfo(); // наприклад, "/users/1" або "/tasks/101"
         if (pathInfo == null || pathInfo.equals("/")) {
             return null;
         }
 
+        String[] pathParts = pathInfo.split("/");
         try {
-            return Long.parseLong(pathInfo.substring(1));
-        } catch (NumberFormatException e) {
-            throw new ValidationException("Invalid ID format: " + pathInfo.substring(1));
+            return Long.parseLong(pathParts[pathParts.length - 1]);
+        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+            logger.warn("Could not extract ID from path: {}", pathInfo);
+            return null;
         }
     }
 
