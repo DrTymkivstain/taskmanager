@@ -46,7 +46,7 @@ public abstract class AbstractServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        Long userId = ((User) req.getAttribute("CurrentUserId")).getId();
+        Long userId = getUserFromRequest(req).getId();
         Long id = extractIdFromPath(req);
 
         if (id == null) {
@@ -71,7 +71,7 @@ public abstract class AbstractServlet extends HttpServlet {
     }
 
     protected Long extractIdFromPath(HttpServletRequest req) {
-        String pathInfo = req.getPathInfo(); // наприклад, "/users/1" або "/tasks/101"
+        String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
             return null;
         }
@@ -83,6 +83,10 @@ public abstract class AbstractServlet extends HttpServlet {
             logger.warn("Could not extract ID from path: {}", pathInfo);
             return null;
         }
+    }
+
+    protected User getUserFromRequest(HttpServletRequest req) {
+        return (User) req.getAttribute("currentUser");
     }
 
     protected <T> T getRequestDto(HttpServletRequest req, Class<T> clazz) {

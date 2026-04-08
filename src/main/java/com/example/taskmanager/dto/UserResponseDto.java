@@ -1,12 +1,13 @@
 package com.example.taskmanager.dto;
 
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@SuperBuilder
 public class UserResponseDto {
 
     private Long id;

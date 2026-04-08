@@ -17,8 +17,8 @@ public class UserDaoJdbcImpl implements UserDao {
 
     @Override
     public User create(User user) {
-        String sql = "INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)";
-        logger.debug("Creating user : {}", user.getEmail());
+        String sql = "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)";
+        logger.info("Creating user : {}", user.getEmail());
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(
                      sql,
@@ -103,7 +103,7 @@ public class UserDaoJdbcImpl implements UserDao {
 
     @Override
     public int update(User user) {
-        String sql = "UPDATE users SET name = ?, email = ?, password_hash = ?, role = ? WHERE id = ?";
+        String sql = "UPDATE users SET username = ?, email = ?, password = ?, role = ? WHERE id = ?";
         logger.debug("Updating user by id: {} by user: {}", user.getId(), user.getEmail());
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -112,7 +112,7 @@ public class UserDaoJdbcImpl implements UserDao {
             statement.setString(2, user.getEmail());
             statement.setString(3, user.getPasswordHash());
             statement.setString(4, user.getRole().name());
-            statement.setLong(4, user.getId());
+            statement.setLong(5, user.getId());
 
             int affectedRows = statement.executeUpdate();
             logger.info("Successfully updated user by id: {} by user: {}", user.getId(), user.getEmail());
@@ -143,9 +143,9 @@ public class UserDaoJdbcImpl implements UserDao {
     private static User getUser(ResultSet resultSet) throws SQLException {
         return new User(
                 resultSet.getLong("id"),
-                resultSet.getString("name"),
+                resultSet.getString("username"),
                 resultSet.getString("email"),
-                resultSet.getString("password_hash"),
+                resultSet.getString("password"),
                 Role.valueOf((resultSet.getString("role"))));
     }
 }

@@ -2,21 +2,25 @@ package com.example.taskmanager.controller;
 
 import com.example.taskmanager.dao.impl.TaskDaoJdbcImpl;
 import com.example.taskmanager.dao.impl.UserDaoJdbcImpl;
+import com.example.taskmanager.dto.TaskResponseDto;
 import com.example.taskmanager.dto.UserRequestDto;
 import com.example.taskmanager.dto.UserResponseDto;
+import com.example.taskmanager.dto.UserWithTasksResponseDto;
 import com.example.taskmanager.exception.AppException;
 import com.example.taskmanager.model.Role;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.services.TaskService;
 import com.example.taskmanager.services.UserService;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
+import java.util.List;
+
 @WebServlet("/admin/*")
 public class AdminServlet extends AbstractServlet {
+    public static final String USERS_PATH = "users";
+    public static final String TASKS_PATH = "tasks";
     private final UserService userService;
     private final TaskService taskService;
 
@@ -54,16 +58,50 @@ public class AdminServlet extends AbstractServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        super.doGet(req, resp);
+        handleRequest(resp, () -> {
+            String pathInfo = req.getPathInfo();
+
+            if (pathInfo == null || pathInfo.equals("/")) {
+                throw new AppException(400, "Resource not specified");
+            }
+
+            String[] parts = pathInfo.split("/");
+            String resource = parts[1];
+            boolean hasId = parts.length > 2;
+
+            if (USERS_PATH.equals(resource)) {
+                if (hasId) {
+                    Long id = extractIdFromPath(req);
+                    UserWithTasksResponseDto user = userService.getUserWithTasks(id);
+                    sendJson(resp, user);
+                    return;
+                }
+                List<UserResponseDto> userResponseDto = userService.getAll();
+                sendJson(resp, userResponseDto);
+                return;
+            }
+
+            if (TASKS_PATH.equals(resource)) {
+                String queryParam = req.getParameter("userId");
+                if (queryParam != null) {
+                    Long userId = Long.parseLong(queryParam);
+                    List<TaskResponseDto> tasks = taskService.getTasksByUserId(userId);
+                    sendJson(resp, tasks);
+                    return;
+                }
+                throw new AppException(400, "Please specify userId to see their tasks: /admin/tasks?userId=15");
+            }
+
+            throw new AppException(404, "Not Found");
+        });
     }
+
 
     @Override
     protected void handleGetById(HttpServletResponse resp, Long id, Long userId) {
-
     }
 
     @Override
     protected void handleGetAll(HttpServletResponse resp, Long userId) {
-
     }
 }

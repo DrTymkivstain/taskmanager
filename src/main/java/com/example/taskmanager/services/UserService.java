@@ -1,13 +1,19 @@
 package com.example.taskmanager.services;
 
+import com.example.taskmanager.dao.TaskDao;
 import com.example.taskmanager.dao.UserDao;
+import com.example.taskmanager.dao.impl.TaskDaoJdbcImpl;
+import com.example.taskmanager.dto.TaskResponseDto;
 import com.example.taskmanager.dto.UserRequestDto;
 import com.example.taskmanager.dto.UserResponseDto;
+import com.example.taskmanager.dto.UserWithTasksResponseDto;
 import com.example.taskmanager.exception.AlreadyExistException;
 import com.example.taskmanager.exception.EntityNotFoundException;
 import com.example.taskmanager.exception.UnAuthorizedException;
+import com.example.taskmanager.mapper.TaskMapper;
 import com.example.taskmanager.mapper.UserMapper;
 import com.example.taskmanager.model.Role;
+import com.example.taskmanager.model.Task;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.util.PasswordUtil;
 import org.slf4j.Logger;
@@ -17,6 +23,7 @@ import java.util.List;
 
 public class UserService {
     private final UserDao userDao;
+    private final TaskDao taskDao = new TaskDaoJdbcImpl();
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public UserService(UserDao userDao) {
@@ -51,7 +58,7 @@ public class UserService {
                 .toList();}
 
     public UserResponseDto updateCurrentUser(Long id, UserRequestDto userRequestDto) {
-        logger.debug("Attempting to update user with id: {}  by admin", id);
+        logger.debug("Attempting to update user with id: {} ", id);
 
         User fromDb = userDao.getById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
         if(userRequestDto.getEmail() != null && !userRequestDto.getEmail().isEmpty() ) {
@@ -99,6 +106,14 @@ public class UserService {
             throw new UnAuthorizedException("Invalid email or password");
         }
         logger.info("Successfully authenticated user by id: {} by user: {}", user.getId(), user.getEmail());
+        return user;
+    }
+
+    public UserWithTasksResponseDto getUserWithTasks(Long id) {
+        User fromDb = userDao.getById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+        List<Task> tasks = taskDao.getTasksByUserId(fromDb.getId());
+        List<TaskResponseDto> taskResponseDtos = tasks.stream().map(TaskMapper::toTaskResponseDto).toList();
+        UserWithTasksResponseDto user = UserMapper.toUserWithTasksResponseDto(fromDb, taskResponseDtos);
         return user;
     }
 }
