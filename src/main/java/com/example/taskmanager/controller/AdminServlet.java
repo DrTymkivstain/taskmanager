@@ -95,13 +95,4 @@ public class AdminServlet extends AbstractServlet {
             throw new AppException(404, "Not Found");
         });
     }
-
-
-    @Override
-    protected void handleGetById(HttpServletResponse resp, Long id, Long userId) {
-    }
-
-    @Override
-    protected void handleGetAll(HttpServletResponse resp, Long userId) {
-    }
 }

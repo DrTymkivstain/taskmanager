@@ -44,23 +44,6 @@ public abstract class AbstractServlet extends HttpServlet {
         }
     }
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        Long userId = getUserFromRequest(req).getId();
-        Long id = extractIdFromPath(req);
-
-        if (id == null) {
-            handleGetAll(resp, userId);
-            return;
-        }
-
-        handleGetById(resp, id, userId);
-    }
-
-    protected abstract void handleGetById(HttpServletResponse resp, Long id, Long userId);
-
-    protected abstract void handleGetAll(HttpServletResponse resp, Long userId);
-
     protected void sendJson(HttpServletResponse resp, Object body) {
         try {
             resp.setContentType("application/json; charset=UTF-8");

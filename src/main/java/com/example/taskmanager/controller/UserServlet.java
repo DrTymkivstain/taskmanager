@@ -38,15 +38,25 @@ public class UserServlet extends AbstractServlet {
         req.getSession().invalidate();
         resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
-
     @Override
-    protected void handleGetById(HttpServletResponse resp, Long id, Long userId) {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
+        Long userId = getUserFromRequest(req).getId();
+        Long id = extractIdFromPath(req);
+
+        if (id == null) {
+            handleGetAll(resp, userId);
+            return;
+        }
+
+        handleGetById(resp, id, userId);
+    }
+
+    private void handleGetById(HttpServletResponse resp, Long id, Long userId) {
         UserResponseDto userResponseDto = userService.getById(id);
         sendJson(resp, userResponseDto);
     }
 
-    @Override
-    protected void handleGetAll(HttpServletResponse resp, Long userId) {
+    private void handleGetAll(HttpServletResponse resp, Long userId) {
         List<UserResponseDto> users = userService.getAll();
         sendJson(resp, users);
     }

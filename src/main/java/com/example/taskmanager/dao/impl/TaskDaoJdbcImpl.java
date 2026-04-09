@@ -115,8 +115,8 @@ public class TaskDaoJdbcImpl implements TaskDao {
         try (Connection connection = ConnectionUtil.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, task.getTitle());
-            statement.setString(2, task.getStatus().name());
-            statement.setLong(3, task.getId());
+            statement.setString(2, task.getDescription());
+            statement.setString(3, task.getStatus().name());
             statement.setLong(4, task.getId());
             statement.setLong(5, task.getUserId());
 
