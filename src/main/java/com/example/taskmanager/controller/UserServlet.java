@@ -3,12 +3,12 @@ package com.example.taskmanager.controller;
 import com.example.taskmanager.dao.impl.UserDaoJdbcImpl;
 import com.example.taskmanager.dto.UserRequestDto;
 import com.example.taskmanager.dto.UserResponseDto;
+import com.example.taskmanager.dto.UserWithTasksResponseDto;
 import com.example.taskmanager.services.UserService;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.util.List;
 
 @WebServlet("/users/*")
 public class UserServlet extends AbstractServlet {
@@ -44,10 +44,9 @@ public class UserServlet extends AbstractServlet {
         Long id = extractIdFromPath(req);
 
         if (id == null) {
-            handleGetAll(resp, userId);
+            handleGetMe(resp, userId);
             return;
         }
-
         handleGetById(resp, id, userId);
     }
 
@@ -56,8 +55,8 @@ public class UserServlet extends AbstractServlet {
         sendJson(resp, userResponseDto);
     }
 
-    private void handleGetAll(HttpServletResponse resp, Long userId) {
-        List<UserResponseDto> users = userService.getAll();
-        sendJson(resp, users);
+    private void handleGetMe(HttpServletResponse resp, Long userId) {
+        UserWithTasksResponseDto user =  userService.getUserWithTasks(userId);
+        sendJson(resp, user);
     }
 }
