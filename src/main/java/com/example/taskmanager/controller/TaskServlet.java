@@ -1,6 +1,5 @@
 package com.example.taskmanager.controller;
 
-import com.example.taskmanager.dao.impl.TaskDaoJdbcImpl;
 import com.example.taskmanager.dto.TaskRequestDto;
 import com.example.taskmanager.dto.TaskResponseDto;
 import com.example.taskmanager.model.User;
@@ -13,7 +12,7 @@ import java.util.List;
 
 @WebServlet("/tasks/*")
 public class TaskServlet extends AbstractServlet {
-    private final TaskService taskService = new TaskService(new TaskDaoJdbcImpl());
+    private final TaskService taskService = (TaskService) getServletContext().getAttribute("taskService");
 
 
     @Override

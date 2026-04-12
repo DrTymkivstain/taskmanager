@@ -1,6 +1,6 @@
 package com.example.taskmanager.services;
 
-import com.example.taskmanager.dao.impl.TaskDaoJdbcImpl;
+import com.example.taskmanager.dao.TaskDao;
 import com.example.taskmanager.dto.TaskRequestDto;
 import com.example.taskmanager.dto.TaskResponseDto;
 import com.example.taskmanager.exception.EntityNotFoundException;
@@ -12,10 +12,10 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 public class TaskService {
-    private final TaskDaoJdbcImpl taskDao;
+    private final TaskDao taskDao;
     private final Logger logger = LoggerFactory.getLogger(TaskService.class);
 
-    public TaskService(TaskDaoJdbcImpl taskDao) {
+    public TaskService(TaskDao taskDao) {
         this.taskDao = taskDao;
     }
 

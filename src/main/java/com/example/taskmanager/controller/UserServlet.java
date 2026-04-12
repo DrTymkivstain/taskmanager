@@ -12,7 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet("/users/*")
 public class UserServlet extends AbstractServlet {
-    private final UserService userService = new UserService(new UserDaoJdbcImpl());
+    private final UserService userService = (UserService) getServletContext().getAttribute("userService");
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
