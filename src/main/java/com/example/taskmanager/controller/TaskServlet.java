@@ -12,8 +12,12 @@ import java.util.List;
 
 @WebServlet("/tasks/*")
 public class TaskServlet extends AbstractServlet {
-    private final TaskService taskService = (TaskService) getServletContext().getAttribute("taskService");
+    private  TaskService taskService;
 
+    @Override
+    public void init() {
+        this.taskService = (TaskService) getServletContext().getAttribute("taskService");
+    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {

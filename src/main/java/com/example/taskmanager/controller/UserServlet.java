@@ -1,6 +1,5 @@
 package com.example.taskmanager.controller;
 
-import com.example.taskmanager.dao.impl.UserDaoJdbcImpl;
 import com.example.taskmanager.dto.UserRequestDto;
 import com.example.taskmanager.dto.UserResponseDto;
 import com.example.taskmanager.dto.UserWithTasksResponseDto;
@@ -12,7 +11,12 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet("/users/*")
 public class UserServlet extends AbstractServlet {
-    private final UserService userService = (UserService) getServletContext().getAttribute("userService");
+    private  UserService userService;
+
+    @Override
+    public void init() {
+        this.userService = (UserService) getServletContext().getAttribute("userService");
+    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
