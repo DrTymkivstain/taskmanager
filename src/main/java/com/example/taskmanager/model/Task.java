@@ -1,16 +1,14 @@
 package com.example.taskmanager.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Task {
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class Task extends BaseEntity {
     private String title;
     private String description;
     private TaskStatus status;

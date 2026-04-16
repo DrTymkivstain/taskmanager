@@ -55,7 +55,8 @@ public class UserService {
         logger.debug("Attempting to get all users");
         return userDao.getAll().stream()
                 .map(UserMapper::toUserResponseDto)
-                .toList();}
+                .toList();
+    }
 
     public UserResponseDto updateCurrentUser(Long id, UserRequestDto userRequestDto) {
         logger.debug("Attempting to update user with id: {} ", id);
@@ -75,6 +76,7 @@ public class UserService {
          if(updated == 0) {throw new EntityNotFoundException("User not found");}
          return UserMapper.toUserResponseDto(fromDb);
     }
+
     public UserResponseDto updateUserByAdmin(Long id, UserRequestDto userRequestDto, Role role) {
         logger.debug("Attempting to update user by id: {}", id);
 

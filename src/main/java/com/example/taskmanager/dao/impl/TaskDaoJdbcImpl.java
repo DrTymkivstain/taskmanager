@@ -18,10 +18,11 @@ public class TaskDaoJdbcImpl implements TaskDao {
     @Override
     public Task create(Task task) {
         String sql = "INSERT INTO tasks (title, status, description, user_id) VALUES (?, ?, ?, ?)";
+        String[] generatedColumns = {"id", "created_at", "updated_at"};
         logger.debug("Creating task: {}", task);
 
         try (Connection connection = ConnectionUtil.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement statement = connection.prepareStatement(sql, generatedColumns)) {
 
             statement.setString(1, task.getTitle());
             statement.setString(2, task.getStatus().name());
@@ -29,13 +30,14 @@ public class TaskDaoJdbcImpl implements TaskDao {
             statement.setLong(4, task.getUserId());
 
             statement.executeUpdate();
-
-            ResultSet generatedKeys = statement.getGeneratedKeys();
-
-            if (generatedKeys.next()) {
-                task.setId(generatedKeys.getLong(1));
+            try (ResultSet resultSet = statement.getGeneratedKeys()) {
+                if (resultSet.next()) {
+                    task.setId(resultSet.getLong(1));
+                    task.setCreationDate(resultSet.getTimestamp("created_at").toLocalDateTime());
+                    task.setModificationDate(resultSet.getTimestamp("updated_at").toLocalDateTime());
+                }
             }
-            logger.info("Task inserted into DB with id: {}", task.getId());
+            logger.info("Task inserted into DB with id: {} at: {}", task.getId(), task.getCreationDate());
             return task;
 
         } catch (SQLException e) {
@@ -47,7 +49,7 @@ public class TaskDaoJdbcImpl implements TaskDao {
 
     @Override
     public List<Task> getTasksByUserId(Long userId) {
-        String sql = "SELECT * FROM tasks WHERE user_id = ?";
+        String sql = "SELECT * FROM tasks WHERE user_id = ? AND is_deleted = false";
         logger.debug("Getting tasks by userId: {}", userId);
         List<Task> tasks = new ArrayList<>();
         try (Connection connection = ConnectionUtil.getConnection();
@@ -69,7 +71,7 @@ public class TaskDaoJdbcImpl implements TaskDao {
 
     @Override
     public Optional<Task> getById(Long id, Long userId) {
-        String sql = "SELECT * FROM tasks WHERE id = ? AND user_id = ?";
+        String sql = "SELECT * FROM tasks WHERE id = ? AND user_id = ? AND is_deleted = false";
         logger.debug("Getting task by id: {} and userId: {}", id, userId);
         try (Connection connection = ConnectionUtil.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 
@@ -92,15 +94,20 @@ public class TaskDaoJdbcImpl implements TaskDao {
 
     @Override
     public int delete(Long id, Long userId) {
-        String sql = "DELETE FROM tasks WHERE id = ? AND user_id = ?";
+        String sql = "UPDATE tasks SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? RETURNING deleted_at, updated_at";
         logger.debug("Deleting task by id: {} and userId: {}", id, userId);
         try (Connection connection = ConnectionUtil.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
             statement.setLong(2, userId);
 
-            int affectedRows = statement.executeUpdate();
-            logger.debug("Delete finished. Rows affected: {}", affectedRows);
-            return affectedRows;
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    logger.info("Deleted task by id: {} and userId: {} at: {}",id, userId,resultSet.getTimestamp("updated_at").toLocalDateTime());
+                    return 1;
+                }
+            }
+            logger.warn("Can`t delete: task {} not found or access denied for user {}", id, userId);
+            return 0;
         } catch (SQLException e) {
             logger.error(e.getMessage(), e);
             throw new RuntimeException("Can't delete task with id: " + id, e);
@@ -109,7 +116,7 @@ public class TaskDaoJdbcImpl implements TaskDao {
 
     @Override
     public int update(Task task) {
-        String sql = "UPDATE tasks SET title = ?, description = ?, status = ? WHERE id = ? AND user_id = ?";
+        String sql = "UPDATE tasks SET title = ?, description = ?, status = ? WHERE id = ? AND user_id = ? AND is_deleted = false RETURNING updated_at";
         logger.debug("Updating task: {}", task);
 
         try (Connection connection = ConnectionUtil.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -120,9 +127,14 @@ public class TaskDaoJdbcImpl implements TaskDao {
             statement.setLong(4, task.getId());
             statement.setLong(5, task.getUserId());
 
-            int affectedRows = statement.executeUpdate();
-            logger.debug("Update finished. Rows affected: {}", affectedRows);
-            return affectedRows;
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    task.setModificationDate(resultSet.getTimestamp("updated_at").toLocalDateTime());
+                    return 1;
+                }
+            }
+            logger.warn("Can`t update: task {} not found or access denied for user {}", task.getId(), task.getUserId());
+            return 0;
         } catch (SQLException e) {
             logger.error(e.getMessage(), e);
             throw new RuntimeException("Cannot update task with id: " + task.getId(), e);
@@ -130,10 +142,19 @@ public class TaskDaoJdbcImpl implements TaskDao {
     }
 
     private static Task getTask(ResultSet resultSet) throws SQLException {
-        return new Task(resultSet.getLong("id"),
-                resultSet.getString("title"),
-                resultSet.getString("description"),
-                TaskStatus.fromString(resultSet.getString("status")),
-                resultSet.getLong("user_id"));
+        Task task = new Task();
+        task.setId(resultSet.getLong("id"));
+        task.setTitle(resultSet.getString("title"));
+        task.setDescription(resultSet.getString("description"));
+        task.setStatus(TaskStatus.valueOf(resultSet.getString("status")));
+        task.setUserId(resultSet.getLong("user_id"));
+
+        task.setCreationDate(resultSet.getTimestamp("created_at").toLocalDateTime());
+        task.setModificationDate(resultSet.getTimestamp("updated_at").toLocalDateTime());
+        task.setIsDeleted(resultSet.getBoolean("is_deleted"));
+        if(resultSet.getTimestamp("deleted_at") != null) {
+            task.setDeletedAt(resultSet.getTimestamp("deleted_at").toLocalDateTime());
+        }
+        return task;
     }
 }
