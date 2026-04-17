@@ -50,12 +50,19 @@ public class TaskService {
 
     public TaskResponseDto update(Long id, TaskRequestDto taskRequestDto, Long userId) {
         logger.debug("Updating task by id: {} by user: {}", id, userId);
-
-        Task task = TaskMapper.toTask(taskRequestDto, userId);
-        task.setId(id);
-        int updated = taskDao.update(task);
+        Task fromDb = taskDao.getById(id,userId).orElseThrow(() -> new EntityNotFoundException("Task not found or access denied!"));
+        if(taskRequestDto.getTitle() != null) {
+            fromDb.setTitle(taskRequestDto.getTitle());
+        }
+        if(taskRequestDto.getDescription() != null) {
+            fromDb.setDescription(taskRequestDto.getDescription());
+        }
+        if(taskRequestDto.getDescription() != null) {
+            fromDb.setDescription(taskRequestDto.getDescription());
+        }
+        int updated = taskDao.update(fromDb);
         if(updated == 0) {throw new EntityNotFoundException("Task not found  or access denied");}
         logger.info("Successfully updated task by id: {} by user: {}", id, userId);
-        return TaskMapper.toTaskResponseDto(task);
+        return TaskMapper.toTaskResponseDto(fromDb);
     }
 }
