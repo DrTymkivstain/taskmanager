@@ -21,6 +21,8 @@ public class TaskMapper {
                 .title(task.getTitle())
                 .description(task.getDescription())
                 .status(task.getStatus().getTitle())
+                .createdAt(task.getCreationDate())
+                .updatedAt(task.getModificationDate())
                 .build();
     }
 }
