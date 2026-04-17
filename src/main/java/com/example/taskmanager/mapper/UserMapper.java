@@ -5,12 +5,14 @@ import com.example.taskmanager.dto.UserRequestDto;
 import com.example.taskmanager.dto.UserResponseDto;
 import com.example.taskmanager.dto.UserWithTasksResponseDto;
 import com.example.taskmanager.model.Role;
-import com.example.taskmanager.model.Task;
 import com.example.taskmanager.model.User;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class UserMapper {
+    private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
 
     public static User toUser(UserRequestDto userRequestDto, String passwordHash) {
         return User.builder()
@@ -26,6 +28,8 @@ public class UserMapper {
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
+                .created_at(user.getCreationDate().format(ISO_FORMATTER))
+                .updated_at(user.getModificationDate().format(ISO_FORMATTER))
                 .build();
     }
 
@@ -34,6 +38,8 @@ public class UserMapper {
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
+                .created_at(user.getCreationDate().format(ISO_FORMATTER))
+                .updated_at(user.getModificationDate().format(ISO_FORMATTER))
                 .tasks(tasks)
                 .build();
     }

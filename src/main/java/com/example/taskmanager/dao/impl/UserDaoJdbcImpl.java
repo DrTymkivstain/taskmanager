@@ -17,21 +17,21 @@ public class UserDaoJdbcImpl implements UserDao {
 
     @Override
     public User create(User user) {
-        String sql = "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?) RETURNING id, created_at, updated_at";
         logger.info("Creating user : {}", user.getEmail());
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(
-                     sql,
-                     Statement.RETURN_GENERATED_KEYS)) {
+                     sql)) {
             statement.setString(1, user.getName());
             statement.setString(2, user.getEmail());
             statement.setString(3, user.getPasswordHash());
             statement.setString(4, user.getRole().name());
-            statement.executeUpdate();
 
-            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+            try (ResultSet generatedKeys = statement.executeQuery()) {
                 if (generatedKeys.next()) {
                     user.setId(generatedKeys.getLong(1));
+                    user.setCreationDate(generatedKeys.getTimestamp("created_at").toLocalDateTime());
+                    user.setModificationDate(generatedKeys.getTimestamp("updated_at").toLocalDateTime());
                 }
                 logger.info("Successfully created user by id: {} by user: {}", user.getId(), user.getEmail());
                 return user;
@@ -44,7 +44,7 @@ public class UserDaoJdbcImpl implements UserDao {
 
     @Override
     public Optional<User> getById(Long id) {
-        String sql = "SELECT * FROM users WHERE id = ?";
+        String sql = "SELECT * FROM users WHERE id = ? AND is_deleted = false";
         logger.debug("Getting user by id: {}", id);
 
         try (Connection connection = ConnectionUtil.getConnection();
@@ -64,25 +64,25 @@ public class UserDaoJdbcImpl implements UserDao {
 
     @Override
     public List<User> getAll() {
-        String sql = "SELECT * FROM users";
+        String sql = "SELECT * FROM users WHERE is_deleted = false";
         List<User> users = new ArrayList<>();
 
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet resaltSet = statement.executeQuery()) {
-            while (resaltSet.next()) {
-                users.add(getUser(resaltSet));
+             ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                users.add(getUser(resultSet));
             }
         } catch (SQLException e) {
             logger.error(e.getMessage());
-            throw new RuntimeException(e);
+            throw new RuntimeException("Can`t get all users from db",e);
         }
         return users;
     }
 
     @Override
     public Optional<User> getByEmail(String email) {
-        String sql = "SELECT * FROM users WHERE email = ?";
+        String sql = "SELECT * FROM users WHERE email = ? AND is_deleted = false";
         logger.debug("Getting user by email: {}", email);
 
         try (Connection connection = ConnectionUtil.getConnection();
@@ -103,7 +103,7 @@ public class UserDaoJdbcImpl implements UserDao {
 
     @Override
     public int update(User user) {
-        String sql = "UPDATE users SET username = ?, email = ?, password = ?, role = ? WHERE id = ?";
+        String sql = "UPDATE users SET username = ?, email = ?, password = ?, role = ? WHERE id = ? AND is_deleted = false RETURNING updated_at";
         logger.debug("Updating user by id: {} by user: {}", user.getId(), user.getEmail());
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -114,9 +114,15 @@ public class UserDaoJdbcImpl implements UserDao {
             statement.setString(4, user.getRole().name());
             statement.setLong(5, user.getId());
 
-            int affectedRows = statement.executeUpdate();
-            logger.info("Successfully updated user by id: {} by user: {}", user.getId(), user.getEmail());
-            return affectedRows;
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    user.setModificationDate(resultSet.getTimestamp("updated_at").toLocalDateTime());
+                    logger.info("Successfully updated user by id: {} by user: {} at: {}", user.getId(), user.getEmail(), user.getModificationDate());
+                    return 1;
+                }
+            }
+            logger.warn("Failed to update user by id: {} by user: {}", user.getId(), user.getEmail());
+            return 0;
         } catch (SQLException e) {
             logger.error(e.getMessage());
             throw new RuntimeException("Can`t update user with id" + user.getId(), e);
@@ -125,15 +131,20 @@ public class UserDaoJdbcImpl implements UserDao {
 
     @Override
     public int delete(Long id) {
-        String sql = "DELETE FROM users WHERE id = ?";
+        String sql = "UPDATE users SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING deleted_at";
         logger.debug("Deleting user by id: {}", id);
 
         try (Connection connection = ConnectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
-            int affectedRows = statement.executeUpdate();
-            logger.info("Successfully deleted user with id: {}", id);
-            return affectedRows;
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    logger.info("Successfully deleted user by id: {}, at: {}", id, resultSet.getTimestamp("deleted_at").toLocalDateTime());
+                    return 1;
+                }
+            }
+            logger.info("Can`t delete user with id: {}", id);
+            return 0;
         } catch (SQLException e) {
             logger.error(e.getMessage());
             throw new RuntimeException("Cannot delete user with id: " + id, e);
@@ -141,11 +152,18 @@ public class UserDaoJdbcImpl implements UserDao {
     }
 
     private static User getUser(ResultSet resultSet) throws SQLException {
-        return new User(
-                resultSet.getLong("id"),
-                resultSet.getString("username"),
-                resultSet.getString("email"),
-                resultSet.getString("password"),
-                Role.valueOf((resultSet.getString("role"))));
+        User user = new User();
+        user.setId(resultSet.getLong("id"));
+        user.setName(resultSet.getString("username"));
+        user.setEmail(resultSet.getString("email"));
+        user.setPasswordHash(resultSet.getString("password"));
+        user.setRole(Role.valueOf((resultSet.getString("role"))));
+        user.setCreationDate(resultSet.getTimestamp("created_at").toLocalDateTime());
+        user.setModificationDate(resultSet.getTimestamp("updated_at").toLocalDateTime());
+        user.setIsDeleted(resultSet.getBoolean("is_deleted"));
+        if(resultSet.getTimestamp("deleted_at") != null) {
+            user.setDeletedAt(resultSet.getTimestamp("deleted_at").toLocalDateTime());
+        }
+        return user;
     }
 }

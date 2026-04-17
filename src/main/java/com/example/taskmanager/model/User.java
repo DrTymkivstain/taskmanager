@@ -11,8 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
-    private Long id;
+public class User extends BaseEntity {
     private String name;
     private String email;
     private String passwordHash;
