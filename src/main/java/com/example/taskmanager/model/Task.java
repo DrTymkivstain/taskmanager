@@ -1,12 +1,13 @@
 package com.example.taskmanager.model;
 
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 public class Task extends BaseEntity {
     private String title;

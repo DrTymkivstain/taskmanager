@@ -5,7 +5,11 @@ import com.example.taskmanager.dto.TaskResponseDto;
 import com.example.taskmanager.model.Task;
 import com.example.taskmanager.model.TaskStatus;
 
+import java.time.format.DateTimeFormatter;
+
 public class TaskMapper {
+    private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     public static Task toTask(TaskRequestDto taskRequestDto, Long userId) {
         return Task.builder()
                 .title(taskRequestDto.getTitle())
@@ -21,8 +25,8 @@ public class TaskMapper {
                 .title(task.getTitle())
                 .description(task.getDescription())
                 .status(task.getStatus().getTitle())
-                .createdAt(task.getCreationDate())
-                .updatedAt(task.getModificationDate())
+                .createdAt(task.getCreationDate().format(ISO_FORMATTER  ))
+                .updatedAt(task.getModificationDate().format(ISO_FORMATTER))
                 .build();
     }
 }

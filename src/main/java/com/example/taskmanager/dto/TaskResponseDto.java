@@ -17,9 +17,6 @@ public class TaskResponseDto {
     private String title;
     private String description;
     private String status;
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
-    LocalDateTime createdAt;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
-    LocalDateTime updatedAt;
+    String createdAt;
+    String updatedAt;
 }
