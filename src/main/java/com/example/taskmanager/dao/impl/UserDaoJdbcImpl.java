@@ -131,24 +131,30 @@ public class UserDaoJdbcImpl implements UserDao {
 
     @Override
     public int delete(Long id) {
-        String sql = "UPDATE users SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING deleted_at";
-        logger.debug("Deleting user by id: {}", id);
-
-        try (Connection connection = ConnectionUtil.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setLong(1, id);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    logger.info("Successfully deleted user by id: {}, at: {}", id, resultSet.getTimestamp("deleted_at").toLocalDateTime());
-                    return 1;
-                }
-            }
-            logger.info("Can`t delete user with id: {}", id);
-            return 0;
+        try (Connection connection = ConnectionUtil.getConnection()){
+            return delete(id, connection);
         } catch (SQLException e) {
             logger.error(e.getMessage());
             throw new RuntimeException("Cannot delete user with id: " + id, e);
         }
+    }
+
+    @Override
+    public int delete(Long userId, Connection connection) throws SQLException {
+        String sql = "UPDATE users SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING deleted_at";
+        logger.debug("Deleting user by id: {}", userId);
+
+        try(PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, userId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    logger.info("Successfully deleted user by id: {}, at: {}", userId, resultSet.getTimestamp("deleted_at").toLocalDateTime());
+                    return 1;
+                }
+            }
+        }
+        logger.info("Can`t delete user with id: {}", userId);
+        return 0;
     }
 
     private static User getUser(ResultSet resultSet) throws SQLException {

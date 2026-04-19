@@ -1,5 +1,6 @@
 package com.example.taskmanager.services;
 
+import com.example.taskmanager.config.ConnectionUtil;
 import com.example.taskmanager.dao.TaskDao;
 import com.example.taskmanager.dao.UserDao;
 import com.example.taskmanager.dao.impl.TaskDaoJdbcImpl;
@@ -19,6 +20,8 @@ import com.example.taskmanager.util.PasswordUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 public class UserService {
@@ -94,12 +97,39 @@ public class UserService {
         return UserMapper.toUserResponseDto(fromDb);
     }
 
-    public void deleteUser(Long id) {
-        logger.debug("Attempting to delete user by id: {}", id);
-        int deleteCount = userDao.delete(id);
-        logger.info("Successfully delete user by id: {} with affected rows: {}", id, deleteCount);
-        if(deleteCount == 0) {throw new EntityNotFoundException("User not found");}
+
+    public void deleteUser(Long userId) {
+    logger.debug("Attempting to delete user by id: {}", userId);
+
+    try(Connection connection = ConnectionUtil.getConnection()) {
+        try {
+            connection.setAutoCommit(false);
+            taskDao.softDeleteAllTasksByUserId(userId,connection);
+
+            int affectedRows = userDao.delete(userId, connection);
+            if(affectedRows == 0) {
+                connection.rollback();
+                throw new EntityNotFoundException("User not found");}
+            if(affectedRows > 1) {
+                connection.rollback();
+                throw new RuntimeException("CRITICAL ERROR: Multiple users affected by single ID delete! Rollback executed.");}
+
+            connection.commit();
+            logger.info("Successfully deleted user by id: {} ", userId);
+        }
+        catch (Exception e) {
+            try { connection.rollback(); } catch (SQLException ex) { logger.error("Rollback failed", ex); }
+            logger.error("Error while deleting user by id: {} ", userId, e);
+            throw e;
+        }
+        finally {
+            connection.setAutoCommit(true);
+        }
+    } catch (SQLException e) {
+        throw new RuntimeException("Database connection error", e);
     }
+}
+
 
     public User authenticate(String email, String password) {
         logger.debug("Attempting to authenticate user: {}", email);

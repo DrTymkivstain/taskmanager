@@ -141,6 +141,17 @@ public class TaskDaoJdbcImpl implements TaskDao {
         }
     }
 
+    @Override
+    public void softDeleteAllTasksByUserId(Long userId, Connection connection) throws SQLException {
+        String sql = "UPDATE tasks SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP WHERE user_id = ? AND is_deleted = false";
+        logger.debug("Deleting all tasks by userId: {}", userId);
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, userId);
+            int affected = statement.executeUpdate();
+            logger.info("Deleted {} tasks by userId: {}",affected,userId);
+        }
+    }
+
     private static Task getTask(ResultSet resultSet) throws SQLException {
         Task task = new Task();
         task.setId(resultSet.getLong("id"));

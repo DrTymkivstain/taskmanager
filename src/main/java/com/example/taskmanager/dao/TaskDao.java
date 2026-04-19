@@ -2,6 +2,8 @@ package com.example.taskmanager.dao;
 
 import com.example.taskmanager.model.Task;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,4 +17,6 @@ public interface TaskDao {
     int delete(Long id, Long userId);
 
     int update(Task task);
+
+    void softDeleteAllTasksByUserId(Long userId, Connection connection) throws SQLException;
 }

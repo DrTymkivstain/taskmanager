@@ -2,6 +2,8 @@ package com.example.taskmanager.dao;
 
 import com.example.taskmanager.model.User;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,4 +14,6 @@ public interface UserDao {
     Optional<User> getByEmail(String email);
     int update(User user);
     int delete(Long id);
+
+    int delete(Long userId, Connection connection) throws SQLException;
 }

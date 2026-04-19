@@ -40,7 +40,7 @@ public abstract class AbstractServlet extends HttpServlet {
         } catch (Exception e) {
             logger.error("SYSTEM ERROR: ", e);
             resp.setStatus(500);
-            sendJson(resp, Map.of("error", "Internal Server Error. Please try again later or contact support."));
+            sendJson(resp, Map.of("error", "Internal Server Error. Please try again later or contact support." + e.getMessage()));
         }
     }
 
