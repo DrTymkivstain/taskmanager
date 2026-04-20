@@ -1,25 +1,33 @@
 package com.example.taskmanager.dao.impl;
 
-import com.example.taskmanager.config.ConnectionUtil;
 import com.example.taskmanager.dao.UserDao;
+import com.example.taskmanager.exception.AlreadyExistException;
 import com.example.taskmanager.model.Role;
 import com.example.taskmanager.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class UserDaoJdbcImpl implements UserDao {
-    private final Logger logger = LoggerFactory.getLogger(UserDaoJdbcImpl.class);
+    public static final String ALREADY_EXIST_STATE = "23505";
+    private final DataSource dataSource;
+    private final Logger logger;
+
+    public UserDaoJdbcImpl(DataSource dataSource) {
+        this.dataSource = dataSource;
+        this.logger = LoggerFactory.getLogger(UserDaoJdbcImpl.class);
+    }
 
     @Override
     public User create(User user) {
         String sql = "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?) RETURNING id, created_at, updated_at";
         logger.info("Creating user : {}", user.getEmail());
-        try (Connection connection = ConnectionUtil.getConnection();
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(
                      sql)) {
             statement.setString(1, user.getName());
@@ -37,6 +45,10 @@ public class UserDaoJdbcImpl implements UserDao {
                 return user;
             }
         } catch (SQLException e) {
+            if(ALREADY_EXIST_STATE.equals(e.getSQLState())) {
+                logger.warn("User with email {} already exists", user.getEmail());
+                throw new AlreadyExistException("User already exists!");
+            }
             logger.error(e.getMessage());
             throw new RuntimeException("Can`t create user", e);
         }
@@ -47,7 +59,7 @@ public class UserDaoJdbcImpl implements UserDao {
         String sql = "SELECT * FROM users WHERE id = ? AND is_deleted = false";
         logger.debug("Getting user by id: {}", id);
 
-        try (Connection connection = ConnectionUtil.getConnection();
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -67,7 +79,7 @@ public class UserDaoJdbcImpl implements UserDao {
         String sql = "SELECT * FROM users WHERE is_deleted = false";
         List<User> users = new ArrayList<>();
 
-        try (Connection connection = ConnectionUtil.getConnection();
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
@@ -85,7 +97,7 @@ public class UserDaoJdbcImpl implements UserDao {
         String sql = "SELECT * FROM users WHERE email = ? AND is_deleted = false";
         logger.debug("Getting user by email: {}", email);
 
-        try (Connection connection = ConnectionUtil.getConnection();
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, email);
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -105,7 +117,7 @@ public class UserDaoJdbcImpl implements UserDao {
     public int update(User user) {
         String sql = "UPDATE users SET username = ?, email = ?, password = ?, role = ? WHERE id = ? AND is_deleted = false RETURNING updated_at";
         logger.debug("Updating user by id: {} by user: {}", user.getId(), user.getEmail());
-        try (Connection connection = ConnectionUtil.getConnection();
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, user.getName());
@@ -131,7 +143,7 @@ public class UserDaoJdbcImpl implements UserDao {
 
     @Override
     public int delete(Long id) {
-        try (Connection connection = ConnectionUtil.getConnection()){
+        try (Connection connection = dataSource.getConnection()){
             return delete(id, connection);
         } catch (SQLException e) {
             logger.error(e.getMessage());

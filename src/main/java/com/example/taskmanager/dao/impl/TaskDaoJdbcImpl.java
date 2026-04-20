@@ -2,18 +2,24 @@ package com.example.taskmanager.dao.impl;
 
 import com.example.taskmanager.dao.TaskDao;
 import com.example.taskmanager.model.Task;
-import com.example.taskmanager.config.ConnectionUtil;
 import com.example.taskmanager.model.TaskStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class TaskDaoJdbcImpl implements TaskDao {
-    private final Logger logger = LoggerFactory.getLogger(TaskDaoJdbcImpl.class);
+    private final DataSource dataSource;
+    private final Logger logger;
+
+    public TaskDaoJdbcImpl(DataSource dataSource) {
+        this.dataSource = dataSource;
+        this.logger  = LoggerFactory.getLogger(TaskDaoJdbcImpl.class);
+    }
 
     @Override
     public Task create(Task task) {
@@ -21,7 +27,7 @@ public class TaskDaoJdbcImpl implements TaskDao {
         String[] generatedColumns = {"id", "created_at", "updated_at"};
         logger.debug("Creating task: {}", task);
 
-        try (Connection connection = ConnectionUtil.getConnection();
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, generatedColumns)) {
 
             statement.setString(1, task.getTitle());
@@ -52,7 +58,7 @@ public class TaskDaoJdbcImpl implements TaskDao {
         String sql = "SELECT * FROM tasks WHERE user_id = ? AND is_deleted = false";
         logger.debug("Getting tasks by userId: {}", userId);
         List<Task> tasks = new ArrayList<>();
-        try (Connection connection = ConnectionUtil.getConnection();
+        try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, userId);
 
@@ -73,7 +79,7 @@ public class TaskDaoJdbcImpl implements TaskDao {
     public Optional<Task> getById(Long id, Long userId) {
         String sql = "SELECT * FROM tasks WHERE id = ? AND user_id = ? AND is_deleted = false";
         logger.debug("Getting task by id: {} and userId: {}", id, userId);
-        try (Connection connection = ConnectionUtil.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = dataSource.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setLong(1, id);
             statement.setLong(2, userId);
@@ -96,7 +102,7 @@ public class TaskDaoJdbcImpl implements TaskDao {
     public int delete(Long id, Long userId) {
         String sql = "UPDATE tasks SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? RETURNING deleted_at, updated_at";
         logger.debug("Deleting task by id: {} and userId: {}", id, userId);
-        try (Connection connection = ConnectionUtil.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = dataSource.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
             statement.setLong(2, userId);
 
@@ -119,7 +125,7 @@ public class TaskDaoJdbcImpl implements TaskDao {
         String sql = "UPDATE tasks SET title = ?, description = ?, status = ? WHERE id = ? AND user_id = ? AND is_deleted = false RETURNING updated_at";
         logger.debug("Updating task: {}", task);
 
-        try (Connection connection = ConnectionUtil.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = dataSource.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, task.getTitle());
             statement.setString(2, task.getDescription());

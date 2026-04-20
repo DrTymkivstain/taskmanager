@@ -16,6 +16,7 @@ public class TaskServlet extends AbstractServlet {
 
     @Override
     public void init() {
+        super.init();
         this.taskService = (TaskService) getServletContext().getAttribute("taskService");
     }
 

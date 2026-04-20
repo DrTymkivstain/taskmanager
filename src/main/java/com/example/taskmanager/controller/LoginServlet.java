@@ -5,6 +5,7 @@ import com.example.taskmanager.dto.LoginRequestDto;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.services.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,10 +19,16 @@ import java.util.Collections;
 
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
-    private final ObjectMapper mapper = new ObjectMapper();
-    private final UserService userService = new UserService(new UserDaoJdbcImpl());
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private  ObjectMapper mapper;
+    private  UserService userService;
+    private  Logger logger;
 
+    @Override
+    public void init() {
+        this.mapper = (ObjectMapper) getServletContext().getAttribute("objectMapper");
+        this.logger = LoggerFactory.getLogger(getClass());
+        this.userService = (UserService) getServletContext().getAttribute("userService");
+    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws  IOException {

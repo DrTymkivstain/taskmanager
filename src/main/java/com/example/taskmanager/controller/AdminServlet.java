@@ -11,6 +11,8 @@ import com.example.taskmanager.model.Role;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.services.TaskService;
 import com.example.taskmanager.services.UserService;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,14 +23,16 @@ import java.util.List;
 public class AdminServlet extends AbstractServlet {
     public static final String USERS_PATH = "users";
     public static final String TASKS_PATH = "tasks";
-    private final UserService userService;
-    private final TaskService taskService;
+    private UserService userService;
+    private TaskService taskService;
 
-    public AdminServlet() {
-        taskService = new TaskService(new TaskDaoJdbcImpl());
-        userService = new UserService(new UserDaoJdbcImpl());
+
+    @Override
+    public void init() {
+        super.init();
+        this.userService = (UserService) getServletContext().getAttribute("userService");
+        this.taskService = (TaskService) getServletContext().getAttribute("taskService");
     }
-
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
