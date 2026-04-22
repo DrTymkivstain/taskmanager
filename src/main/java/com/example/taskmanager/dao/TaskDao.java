@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface TaskDao {
     Task create(Task task);
 
-    List<Task> getTasksByUserId(Long userId, int limit, int offset);
+    List<Task> getTasksByUserId(Long userId, int limit, int offset, String sortBy, String sortOrder);
 
     Optional<Task> getById(Long id, Long userId);
 

@@ -27,16 +27,18 @@ public class TaskService {
         return TaskMapper.toTaskResponseDto(created);
     }
 
-    public List<TaskResponseDto> getTasksByUserId(Long userId, String pageParam, String sizeParam) {
+    public List<TaskResponseDto> getTasksByUserId(Long userId, String pageParam, String sizeParam, String sortByParam, String sortOrderParam) {
         logger.debug("Getting tasks by userId: {}", userId);
 
         int page = (pageParam != null) ? Math.max(1, Integer.parseInt(pageParam)) : 1;
         int size = (sizeParam != null) ? Math.max(1, Integer.parseInt(sizeParam)) : 10;
+        String sortBy = sortByParam != null ? sortByParam : "title";
+        String sortOrder = sortOrderParam != null ? sortOrderParam.toUpperCase() : "DESC";
 
         int limit = size;
         int offset = (page-1) * limit;
 
-        List<TaskResponseDto> tasks = taskDao.getTasksByUserId(userId, limit, offset).stream()
+        List<TaskResponseDto> tasks = taskDao.getTasksByUserId(userId, limit, offset, sortBy, sortOrder).stream()
                 .map(TaskMapper::toTaskResponseDto)
                 .toList();
         logger.info("Successfully fetched {} tasks for user ID: {}", tasks.size(), userId);

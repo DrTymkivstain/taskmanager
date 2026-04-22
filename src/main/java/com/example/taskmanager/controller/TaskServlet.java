@@ -64,8 +64,10 @@ public class TaskServlet extends AbstractServlet {
     private void handleGetAll(HttpServletRequest req, HttpServletResponse resp, Long userId) {
         String page = req.getParameter("page");
         String size = req.getParameter("size");
+        String sortBy = req.getParameter("sortBy");
+        String sortOrder = req.getParameter("sortOrder");
 
-        List<TaskResponseDto> tasks = taskService.getTasksByUserId(userId, page, size);
+        List<TaskResponseDto> tasks = taskService.getTasksByUserId(userId, page, size, sortBy, sortOrder);
         sendJson(resp, tasks);
     }
 
