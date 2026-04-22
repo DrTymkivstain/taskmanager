@@ -4,7 +4,6 @@ import com.example.taskmanager.exception.AppException;
 import com.example.taskmanager.exception.ValidationException;
 import com.example.taskmanager.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;

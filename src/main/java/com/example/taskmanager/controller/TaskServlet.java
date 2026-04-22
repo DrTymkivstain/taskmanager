@@ -54,15 +54,18 @@ public class TaskServlet extends AbstractServlet {
         Long id = extractIdFromPath(req);
 
         if (id == null) {
-            handleGetAll(resp, userId);
+            handleGetAll(req, resp, userId);
             return;
         }
 
         handleGetById(resp, id, userId);
     }
 
-    private void handleGetAll(HttpServletResponse resp, Long userId) {
-        List<TaskResponseDto> tasks = taskService.getTasksByUserId(userId);
+    private void handleGetAll(HttpServletRequest req, HttpServletResponse resp, Long userId) {
+        String page = req.getParameter("page");
+        String size = req.getParameter("size");
+
+        List<TaskResponseDto> tasks = taskService.getTasksByUserId(userId, page, size);
         sendJson(resp, tasks);
     }
 

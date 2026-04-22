@@ -89,7 +89,7 @@ public class AdminServlet extends AbstractServlet {
                 String queryParam = req.getParameter("userId");
                 if (queryParam != null) {
                     Long userId = Long.parseLong(queryParam);
-                    List<TaskResponseDto> tasks = taskService.getTasksByUserId(userId);
+                    List<TaskResponseDto> tasks = taskService.getTasksByUserId(userId, null, null);
                     sendJson(resp, tasks);
                     return;
                 }

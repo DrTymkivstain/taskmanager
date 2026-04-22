@@ -6,7 +6,6 @@ import com.example.taskmanager.dto.TaskResponseDto;
 import com.example.taskmanager.dto.UserRequestDto;
 import com.example.taskmanager.dto.UserResponseDto;
 import com.example.taskmanager.dto.UserWithTasksResponseDto;
-import com.example.taskmanager.exception.AlreadyExistException;
 import com.example.taskmanager.exception.EntityNotFoundException;
 import com.example.taskmanager.exception.UnAuthorizedException;
 import com.example.taskmanager.mapper.TaskMapper;
@@ -140,7 +139,7 @@ public class UserService {
 
     public UserWithTasksResponseDto getUserWithTasks(Long id) {
         User fromDb = userDao.getById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
-        List<Task> tasks = taskDao.getTasksByUserId(fromDb.getId());
+        List<Task> tasks = taskDao.getTasksByUserId(fromDb.getId(), 1000, 0);
         List<TaskResponseDto> taskResponseDtos = tasks.stream().map(TaskMapper::toTaskResponseDto).toList();
         UserWithTasksResponseDto user = UserMapper.toUserWithTasksResponseDto(fromDb, taskResponseDtos);
         return user;

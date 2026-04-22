@@ -54,13 +54,16 @@ public class TaskDaoJdbcImpl implements TaskDao {
 
 
     @Override
-    public List<Task> getTasksByUserId(Long userId) {
-        String sql = "SELECT * FROM tasks WHERE user_id = ? AND is_deleted = false";
+    public List<Task> getTasksByUserId(Long userId, int limit, int offset) {
+        String sql = "SELECT * FROM tasks WHERE user_id = ? AND is_deleted = false ORDER BY id DESC LIMIT ? OFFSET ?";
+
         logger.debug("Getting tasks by userId: {}", userId);
         List<Task> tasks = new ArrayList<>();
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, userId);
+            statement.setInt(2, limit);
+            statement.setInt(3, offset);
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
