@@ -1,6 +1,8 @@
 package com.example.taskmanager.services;
 
 import com.example.taskmanager.dao.TaskDao;
+import com.example.taskmanager.dto.PageRequestDto;
+import com.example.taskmanager.dto.PageResponseDto;
 import com.example.taskmanager.dto.TaskRequestDto;
 import com.example.taskmanager.dto.TaskResponseDto;
 import com.example.taskmanager.exception.EntityNotFoundException;
@@ -10,10 +12,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 
 public class TaskService {
     private final TaskDao taskDao;
     private final Logger logger = LoggerFactory.getLogger(TaskService.class);
+    private static final Map<String, String> SORT_COLUMNS = Map.of("title", "title",
+            "description", "description",
+            "createdAt", "created_at",
+            "updatedAt", "updated_at",
+            "id", "id",
+            "status", "CASE " +
+            "  WHEN status = 'NOT_STARTED' THEN 1 " +
+            "  WHEN status = 'IN_PROGRESS' THEN 2 " +
+            "  WHEN status = 'COMPLETED' THEN 3 " +
+            "  ELSE 4 END");
 
     public TaskService(TaskDao taskDao) {
         this.taskDao = taskDao;
@@ -27,22 +40,21 @@ public class TaskService {
         return TaskMapper.toTaskResponseDto(created);
     }
 
-    public List<TaskResponseDto> getTasksByUserId(Long userId, String pageParam, String sizeParam, String sortByParam, String sortOrderParam) {
+    public PageResponseDto<TaskResponseDto> getTasksByUserId(Long userId, PageRequestDto  pageRequestDto) {
         logger.debug("Getting tasks by userId: {}", userId);
 
-        int page = (pageParam != null) ? Math.max(1, Integer.parseInt(pageParam)) : 1;
-        int size = (sizeParam != null) ? Math.max(1, Integer.parseInt(sizeParam)) : 10;
-        String sortBy = sortByParam != null ? sortByParam : "title";
-        String sortOrder = sortOrderParam != null ? sortOrderParam.toUpperCase() : "DESC";
+        String sortColumn = SORT_COLUMNS.getOrDefault(pageRequestDto.getSortBy(), "title");
+        int limit = pageRequestDto.getSize();
+        int offset = (pageRequestDto.getPage() - 1) * limit;
 
-        int limit = size;
-        int offset = (page-1) * limit;
-
-        List<TaskResponseDto> tasks = taskDao.getTasksByUserId(userId, limit, offset, sortBy, sortOrder).stream()
+        List<TaskResponseDto> tasks = taskDao.getTasksByUserId(userId, limit, offset, sortColumn, pageRequestDto.getSortOrder()).stream()
                 .map(TaskMapper::toTaskResponseDto)
                 .toList();
+
+        long totalElements = taskDao.countTasksByUserId(userId);
+        PageResponseDto<TaskResponseDto> resp = new PageResponseDto<>(tasks, pageRequestDto.getPage(), pageRequestDto.getSize(), totalElements);
         logger.info("Successfully fetched {} tasks for user ID: {}", tasks.size(), userId);
-        return tasks;
+        return resp;
     }
 
     public TaskResponseDto getById(Long id, Long userId) {

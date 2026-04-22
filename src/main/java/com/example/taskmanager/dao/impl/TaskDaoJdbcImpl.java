@@ -80,6 +80,28 @@ public class TaskDaoJdbcImpl implements TaskDao {
     }
 
     @Override
+    public List<Task> getTasksByUserId(Long userId) {
+        String sql = "SELECT * FROM tasks WHERE user_id = ? AND is_deleted = false";
+        logger.debug("Getting tasks by userId: {}", userId);
+        List<Task> tasks = new ArrayList<>();
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, userId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    tasks.add(getTask(resultSet));
+                }
+                logger.info("Retrieved {} tasks by userId: {}",tasks.size(), userId);
+                return tasks;
+            }
+        } catch (SQLException e) {
+            logger.error(e.getMessage(), e);
+            throw new RuntimeException("Can't get all tasks from DB", e);
+        }
+    }
+
+    @Override
     public Optional<Task> getById(Long id, Long userId) {
         String sql = "SELECT * FROM tasks WHERE id = ? AND user_id = ? AND is_deleted = false";
         logger.debug("Getting task by id: {} and userId: {}", id, userId);
@@ -160,6 +182,30 @@ public class TaskDaoJdbcImpl implements TaskDao {
             int affected = statement.executeUpdate();
             logger.info("Deleted {} tasks by userId: {}",affected,userId);
         }
+    }
+
+    @Override
+    public long countTasksByUserId(Long userId) {
+        String sql = "SELECT COUNT(*) FROM tasks WHERE user_id = ? AND is_deleted = false";
+        logger.debug("Counting tasks for userId: {}", userId);
+
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setLong(1, userId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    long count = resultSet.getLong(1);
+                    logger.info("Total tasks count for user {}: {}", userId, count);
+                    return count;
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error counting tasks for userId: {}", userId, e);
+            throw new RuntimeException("Can't count tasks in DB", e);
+        }
+        return 0;
     }
 
     private static Task getTask(ResultSet resultSet) throws SQLException {

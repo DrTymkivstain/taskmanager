@@ -139,7 +139,7 @@ public class UserService {
 
     public UserWithTasksResponseDto getUserWithTasks(Long id) {
         User fromDb = userDao.getById(id).orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
-        List<Task> tasks = taskDao.getTasksByUserId(fromDb.getId(), 1000, 0, null, null);
+        List<Task> tasks = taskDao.getTasksByUserId(fromDb.getId());
         List<TaskResponseDto> taskResponseDtos = tasks.stream().map(TaskMapper::toTaskResponseDto).toList();
         UserWithTasksResponseDto user = UserMapper.toUserWithTasksResponseDto(fromDb, taskResponseDtos);
         return user;

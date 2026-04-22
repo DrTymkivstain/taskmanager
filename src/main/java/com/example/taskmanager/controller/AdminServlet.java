@@ -2,10 +2,7 @@ package com.example.taskmanager.controller;
 
 import com.example.taskmanager.dao.impl.TaskDaoJdbcImpl;
 import com.example.taskmanager.dao.impl.UserDaoJdbcImpl;
-import com.example.taskmanager.dto.TaskResponseDto;
-import com.example.taskmanager.dto.UserRequestDto;
-import com.example.taskmanager.dto.UserResponseDto;
-import com.example.taskmanager.dto.UserWithTasksResponseDto;
+import com.example.taskmanager.dto.*;
 import com.example.taskmanager.exception.AppException;
 import com.example.taskmanager.model.Role;
 import com.example.taskmanager.model.User;
@@ -87,9 +84,10 @@ public class AdminServlet extends AbstractServlet {
 
             if (TASKS_PATH.equals(resource)) {
                 String queryParam = req.getParameter("userId");
+                PageRequestDto pageRequestDto = PageRequestDto.createPageRequestDto(req);
                 if (queryParam != null) {
                     Long userId = Long.parseLong(queryParam);
-                    List<TaskResponseDto> tasks = taskService.getTasksByUserId(userId, null, null, null, null);
+                    PageResponseDto<TaskResponseDto> tasks = taskService.getTasksByUserId(userId, pageRequestDto);
                     sendJson(resp, tasks);
                     return;
                 }

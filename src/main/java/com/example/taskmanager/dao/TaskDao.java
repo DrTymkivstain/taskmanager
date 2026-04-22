@@ -12,6 +12,8 @@ public interface TaskDao {
 
     List<Task> getTasksByUserId(Long userId, int limit, int offset, String sortBy, String sortOrder);
 
+    List<Task> getTasksByUserId(Long userId);
+
     Optional<Task> getById(Long id, Long userId);
 
     int delete(Long id, Long userId);
@@ -19,4 +21,6 @@ public interface TaskDao {
     int update(Task task);
 
     void softDeleteAllTasksByUserId(Long userId, Connection connection) throws SQLException;
+
+    long countTasksByUserId(Long userId);
 }

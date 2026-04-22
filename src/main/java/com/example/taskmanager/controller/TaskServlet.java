@@ -1,5 +1,7 @@
 package com.example.taskmanager.controller;
 
+import com.example.taskmanager.dto.PageRequestDto;
+import com.example.taskmanager.dto.PageResponseDto;
 import com.example.taskmanager.dto.TaskRequestDto;
 import com.example.taskmanager.dto.TaskResponseDto;
 import com.example.taskmanager.model.User;
@@ -62,12 +64,9 @@ public class TaskServlet extends AbstractServlet {
     }
 
     private void handleGetAll(HttpServletRequest req, HttpServletResponse resp, Long userId) {
-        String page = req.getParameter("page");
-        String size = req.getParameter("size");
-        String sortBy = req.getParameter("sortBy");
-        String sortOrder = req.getParameter("sortOrder");
+        PageRequestDto pageRequestDto = PageRequestDto.createPageRequestDto(req);
 
-        List<TaskResponseDto> tasks = taskService.getTasksByUserId(userId, page, size, sortBy, sortOrder);
+        PageResponseDto<TaskResponseDto> tasks = taskService.getTasksByUserId(userId,pageRequestDto);
         sendJson(resp, tasks);
     }
 
