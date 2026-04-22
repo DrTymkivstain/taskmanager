@@ -1,14 +1,11 @@
 package com.example.taskmanager.services;
 
-import com.example.taskmanager.config.ConnectionUtil;
 import com.example.taskmanager.dao.TaskDao;
 import com.example.taskmanager.dao.UserDao;
-import com.example.taskmanager.dao.impl.TaskDaoJdbcImpl;
 import com.example.taskmanager.dto.TaskResponseDto;
 import com.example.taskmanager.dto.UserRequestDto;
 import com.example.taskmanager.dto.UserResponseDto;
 import com.example.taskmanager.dto.UserWithTasksResponseDto;
-import com.example.taskmanager.exception.AlreadyExistException;
 import com.example.taskmanager.exception.EntityNotFoundException;
 import com.example.taskmanager.exception.UnAuthorizedException;
 import com.example.taskmanager.mapper.TaskMapper;
@@ -20,27 +17,26 @@ import com.example.taskmanager.util.PasswordUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
 public class UserService {
     private final UserDao userDao;
-    private final TaskDao taskDao = new TaskDaoJdbcImpl();
+    private final TaskDao taskDao;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private  final DataSource dataSource;
 
-    public UserService(UserDao userDao) {
+    public UserService(UserDao userDao, TaskDao taskDao, DataSource dataSource) {
         this.userDao = userDao;
+        this.taskDao = taskDao;
+        this.dataSource = dataSource;
     }
 
     public UserResponseDto createUser(UserRequestDto userRequestDto) {
         logger.debug("Attempting to create user: {}", userRequestDto);
-        if(userDao.getByEmail(userRequestDto.getEmail()).isPresent()) {
-            throw new AlreadyExistException("User with email " + userRequestDto.getEmail() + " already exists");
-        }
-
         String hash = PasswordUtil.hashPassword(userRequestDto.getPassword());
-
         User user = UserMapper.toUser(userRequestDto, hash);
         User createdUser = userDao.create(user);
         logger.info("Successfully created user by id: {} by user: {}", createdUser.getId(), createdUser.getEmail());
@@ -101,7 +97,7 @@ public class UserService {
     public void deleteUser(Long userId) {
     logger.debug("Attempting to delete user by id: {}", userId);
 
-    try(Connection connection = ConnectionUtil.getConnection()) {
+    try(Connection connection = dataSource.getConnection()) {
         try {
             connection.setAutoCommit(false);
             taskDao.softDeleteAllTasksByUserId(userId,connection);

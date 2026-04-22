@@ -15,6 +15,7 @@ public class UserServlet extends AbstractServlet {
 
     @Override
     public void init() {
+        super.init();
         this.userService = (UserService) getServletContext().getAttribute("userService");
     }
 

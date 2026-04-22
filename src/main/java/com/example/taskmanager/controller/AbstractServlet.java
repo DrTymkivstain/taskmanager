@@ -15,8 +15,13 @@ import java.io.IOException;
 import java.util.Map;
 
 public abstract class AbstractServlet extends HttpServlet {
-    protected final ObjectMapper mapper = new ObjectMapper();
+    protected ObjectMapper mapper;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    @Override
+    public void init() {
+        this.mapper = (ObjectMapper) getServletContext().getAttribute("objectMapper");
+    }
 
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {

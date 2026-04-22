@@ -1,5 +1,7 @@
 package com.example.taskmanager.controller;
 
+import com.example.taskmanager.dto.PageRequestDto;
+import com.example.taskmanager.dto.PageResponseDto;
 import com.example.taskmanager.dto.TaskRequestDto;
 import com.example.taskmanager.dto.TaskResponseDto;
 import com.example.taskmanager.model.User;
@@ -16,6 +18,7 @@ public class TaskServlet extends AbstractServlet {
 
     @Override
     public void init() {
+        super.init();
         this.taskService = (TaskService) getServletContext().getAttribute("taskService");
     }
 
@@ -53,15 +56,17 @@ public class TaskServlet extends AbstractServlet {
         Long id = extractIdFromPath(req);
 
         if (id == null) {
-            handleGetAll(resp, userId);
+            handleGetAll(req, resp, userId);
             return;
         }
 
         handleGetById(resp, id, userId);
     }
 
-    private void handleGetAll(HttpServletResponse resp, Long userId) {
-        List<TaskResponseDto> tasks = taskService.getTasksByUserId(userId);
+    private void handleGetAll(HttpServletRequest req, HttpServletResponse resp, Long userId) {
+        PageRequestDto pageRequestDto = PageRequestDto.createPageRequestDto(req);
+
+        PageResponseDto<TaskResponseDto> tasks = taskService.getTasksByUserId(userId,pageRequestDto);
         sendJson(resp, tasks);
     }
 

@@ -10,6 +10,8 @@ import java.util.Optional;
 public interface TaskDao {
     Task create(Task task);
 
+    List<Task> getTasksByUserId(Long userId, int limit, int offset, String sortBy, String sortOrder);
+
     List<Task> getTasksByUserId(Long userId);
 
     Optional<Task> getById(Long id, Long userId);
@@ -19,4 +21,6 @@ public interface TaskDao {
     int update(Task task);
 
     void softDeleteAllTasksByUserId(Long userId, Connection connection) throws SQLException;
+
+    long countTasksByUserId(Long userId);
 }

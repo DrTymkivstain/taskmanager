@@ -2,15 +2,14 @@ package com.example.taskmanager.controller;
 
 import com.example.taskmanager.dao.impl.TaskDaoJdbcImpl;
 import com.example.taskmanager.dao.impl.UserDaoJdbcImpl;
-import com.example.taskmanager.dto.TaskResponseDto;
-import com.example.taskmanager.dto.UserRequestDto;
-import com.example.taskmanager.dto.UserResponseDto;
-import com.example.taskmanager.dto.UserWithTasksResponseDto;
+import com.example.taskmanager.dto.*;
 import com.example.taskmanager.exception.AppException;
 import com.example.taskmanager.model.Role;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.services.TaskService;
 import com.example.taskmanager.services.UserService;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,14 +20,16 @@ import java.util.List;
 public class AdminServlet extends AbstractServlet {
     public static final String USERS_PATH = "users";
     public static final String TASKS_PATH = "tasks";
-    private final UserService userService;
-    private final TaskService taskService;
+    private UserService userService;
+    private TaskService taskService;
 
-    public AdminServlet() {
-        taskService = new TaskService(new TaskDaoJdbcImpl());
-        userService = new UserService(new UserDaoJdbcImpl());
+
+    @Override
+    public void init() {
+        super.init();
+        this.userService = (UserService) getServletContext().getAttribute("userService");
+        this.taskService = (TaskService) getServletContext().getAttribute("taskService");
     }
-
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
@@ -83,9 +84,10 @@ public class AdminServlet extends AbstractServlet {
 
             if (TASKS_PATH.equals(resource)) {
                 String queryParam = req.getParameter("userId");
+                PageRequestDto pageRequestDto = PageRequestDto.createPageRequestDto(req);
                 if (queryParam != null) {
                     Long userId = Long.parseLong(queryParam);
-                    List<TaskResponseDto> tasks = taskService.getTasksByUserId(userId);
+                    PageResponseDto<TaskResponseDto> tasks = taskService.getTasksByUserId(userId, pageRequestDto);
                     sendJson(resp, tasks);
                     return;
                 }
