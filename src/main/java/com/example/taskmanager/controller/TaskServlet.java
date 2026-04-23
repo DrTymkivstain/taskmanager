@@ -6,6 +6,7 @@ import com.example.taskmanager.dto.TaskRequestDto;
 import com.example.taskmanager.dto.TaskResponseDto;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.services.TaskService;
+import com.example.taskmanager.util.JsonUtil;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,7 +29,7 @@ public class TaskServlet extends AbstractServlet {
         Long userId = ((User) req.getAttribute("currentUser")).getId();
         TaskResponseDto taskResponseDto = taskService.create(request, userId);
         resp.setStatus(HttpServletResponse.SC_CREATED);
-        sendJson(resp, taskResponseDto);
+        JsonUtil.sendJson(resp, taskResponseDto);
     }
 
     @Override
@@ -39,7 +40,7 @@ public class TaskServlet extends AbstractServlet {
         TaskRequestDto taskRequestDto = getRequestDto(req, TaskRequestDto.class);
         TaskResponseDto taskResponseDto = taskService.update(id, taskRequestDto, userId);
         resp.setStatus(HttpServletResponse.SC_OK);
-        sendJson(resp, taskResponseDto);
+        JsonUtil.sendJson(resp, taskResponseDto);
     }
 
     @Override
@@ -67,11 +68,11 @@ public class TaskServlet extends AbstractServlet {
         PageRequestDto pageRequestDto = PageRequestDto.createPageRequestDto(req);
 
         PageResponseDto<TaskResponseDto> tasks = taskService.getTasksByUserId(userId,pageRequestDto);
-        sendJson(resp, tasks);
+        JsonUtil.sendJson(resp, tasks);
     }
 
     private void handleGetById(HttpServletResponse resp, Long id, Long userId) {
         TaskResponseDto taskResponseDto = taskService.getById(id, userId);
-        sendJson(resp, taskResponseDto);
+        JsonUtil.sendJson(resp, taskResponseDto);
     }
 }

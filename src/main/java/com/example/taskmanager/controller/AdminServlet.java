@@ -1,15 +1,12 @@
 package com.example.taskmanager.controller;
 
-import com.example.taskmanager.dao.impl.TaskDaoJdbcImpl;
-import com.example.taskmanager.dao.impl.UserDaoJdbcImpl;
 import com.example.taskmanager.dto.*;
 import com.example.taskmanager.exception.AppException;
 import com.example.taskmanager.model.Role;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.services.TaskService;
 import com.example.taskmanager.services.UserService;
-import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletException;
+import com.example.taskmanager.util.JsonUtil;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -54,12 +51,12 @@ public class AdminServlet extends AbstractServlet {
         Role newRole = (roleParam != null) ? Role.valueOf(roleParam.toUpperCase()) : null;
         UserResponseDto responseDto = userService.updateUserByAdmin(userId, userRequestDto, newRole);
         resp.setStatus(HttpServletResponse.SC_OK);
-        sendJson(resp, responseDto);
+        JsonUtil.sendJson(resp, responseDto);
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        handleRequest(resp, () -> {
+
             String pathInfo = req.getPathInfo();
 
             if (pathInfo == null || pathInfo.equals("/")) {
@@ -74,11 +71,11 @@ public class AdminServlet extends AbstractServlet {
                 if (hasId) {
                     Long id = extractIdFromPath(req);
                     UserWithTasksResponseDto user = userService.getUserWithTasks(id);
-                    sendJson(resp, user);
+                    JsonUtil.sendJson(resp, user);
                     return;
                 }
                 List<UserResponseDto> userResponseDto = userService.getAll();
-                sendJson(resp, userResponseDto);
+                JsonUtil.sendJson(resp, userResponseDto);
                 return;
             }
 
@@ -88,13 +85,12 @@ public class AdminServlet extends AbstractServlet {
                 if (queryParam != null) {
                     Long userId = Long.parseLong(queryParam);
                     PageResponseDto<TaskResponseDto> tasks = taskService.getTasksByUserId(userId, pageRequestDto);
-                    sendJson(resp, tasks);
+                    JsonUtil.sendJson(resp, tasks);
                     return;
                 }
                 throw new AppException(400, "Please specify userId to see their tasks: /admin/tasks?userId=15");
             }
 
             throw new AppException(404, "Not Found");
-        });
     }
 }

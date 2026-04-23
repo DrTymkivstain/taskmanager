@@ -4,6 +4,7 @@ import com.example.taskmanager.dto.UserRequestDto;
 import com.example.taskmanager.dto.UserResponseDto;
 import com.example.taskmanager.dto.UserWithTasksResponseDto;
 import com.example.taskmanager.services.UserService;
+import com.example.taskmanager.util.JsonUtil;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,7 +25,7 @@ public class UserServlet extends AbstractServlet {
         UserRequestDto userRequestDto = getRequestDto(req, UserRequestDto.class);
         UserResponseDto userResponseDto = userService.createUser(userRequestDto);
         resp.setStatus(HttpServletResponse.SC_CREATED);
-        sendJson(resp, userResponseDto);
+        JsonUtil.sendJson(resp, userResponseDto);
     }
 
     @Override
@@ -33,7 +34,7 @@ public class UserServlet extends AbstractServlet {
         UserRequestDto userRequestDto = getRequestDto(req, UserRequestDto.class);
         UserResponseDto userResponseDto = userService.updateCurrentUser(id, userRequestDto);
         resp.setStatus(HttpServletResponse.SC_OK);
-        sendJson(resp, userResponseDto);
+        JsonUtil.sendJson(resp, userResponseDto);
     }
 
     @Override
@@ -57,11 +58,11 @@ public class UserServlet extends AbstractServlet {
 
     private void handleGetById(HttpServletResponse resp, Long id, Long userId) {
         UserResponseDto userResponseDto = userService.getById(id);
-        sendJson(resp, userResponseDto);
+        JsonUtil.sendJson(resp, userResponseDto);
     }
 
     private void handleGetMe(HttpServletResponse resp, Long userId) {
         UserWithTasksResponseDto user =  userService.getUserWithTasks(userId);
-        sendJson(resp, user);
+        JsonUtil.sendJson(resp, user);
     }
 }
