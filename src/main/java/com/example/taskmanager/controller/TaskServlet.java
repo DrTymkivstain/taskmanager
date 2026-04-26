@@ -11,8 +11,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.util.List;
-
 @WebServlet("/tasks/*")
 public class TaskServlet extends AbstractServlet {
     private  TaskService taskService;
